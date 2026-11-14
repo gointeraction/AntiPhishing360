@@ -812,3 +812,47 @@ body {
     border: 1px solid #0A3D91 !important;
   }
 }
+
+/* --------------------------------------------------------------------------
+   SECCIÓN DE INTELIGENCIA FORENSE PROFUNDA (/scan/:id)
+   -------------------------------------------------------------------------- */
+.forensic-dossier-report-section {
+  margin-top: 28px;
+}
+
+.forensic-report-dest-item {
+  margin-top: 12px;
+  padding: 14px;
+  border-radius: 12px;
+  background: rgba(2, 6, 23, 0.68);
+  border: 1px solid rgba(239, 68, 68, 0.38);
+}
+
+.forensic-report-curl-wrap {
+  margin-top: 14px;
+  padding: 14px;
+  border-radius: 12px;
+  background: #02081A;
+  border: 1px solid rgba(0, 225, 255, 0.32);
+}
+
+.forensic-report-curl-hdr {
+  font-size: 0.8rem;
+  color: #00E1FF;
+  margin-bottom: 8px;
+  word-break: break-word;
+}
+
+.forensic-report-curl-pre {
+  margin: 6px 0 0;
+  padding: 12px;
+  background: #01040D;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 8px;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: #A5F3FC;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+}

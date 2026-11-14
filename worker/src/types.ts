@@ -120,6 +120,7 @@ export interface TransportAuditResult {
   responseTimeMs?: number;
   contentType?: string;
   redirectChain?: string[];
+  rawHeaders?: Record<string, string>;
   securityHeaders: {
     strict_transport_security: boolean;
     content_security_policy: boolean;
@@ -186,6 +187,94 @@ export interface VisualBrandAuditDTO {
   verdict_summary: string;
 }
 
+export interface HostingIntelDTO {
+  queried_host: string;
+  ip_addresses: string[];
+  ipv6_addresses: string[];
+  cname_chain: string[];
+  hosting_provider: string;
+  asn: string;
+  isp_organization: string;
+  country: string;
+  region_city: string;
+  server_software: string;
+  cdn_or_waf_behind: string | null;
+  nameservers: string[];
+  mx_records: string[];
+  txt_records: string[];
+  infrastructure_notes: string;
+}
+
+export interface WhoisRdapAuditDTO {
+  queried_domain: string;
+  lookup_source: string;
+  registrar_name: string;
+  registrar_iana_id: string | null;
+  creation_date: string | null;
+  updated_date: string | null;
+  expiration_date: string | null;
+  domain_age_days: number | null;
+  domain_status: string[];
+  registrant_organization: string;
+  abuse_contact_email: string | null;
+  abuse_contact_phone: string | null;
+  nameservers: string[];
+  raw_whois_lines: string[];
+  forensic_assessment: string;
+}
+
+export type ExfiltrationDestinationType =
+  | 'SAME_SERVER_FILE'
+  | 'EXTERNAL_DROP_SERVER'
+  | 'TELEGRAM_BOT_API'
+  | 'DISCORD_WEBHOOK'
+  | 'CLOUD_REPO_OR_BACKEND'
+  | 'FORM_RELAY_SERVICE';
+
+export interface ExfiltrationDestinationDTO {
+  destination_url: string;
+  destination_host: string;
+  destination_path: string;
+  destination_type: ExfiltrationDestinationType;
+  is_same_server: boolean;
+  http_method: string;
+  source_location: string;
+  captured_fields: string[];
+  repository_or_collector_id: string;
+  resolved_ip_and_asn: string | null;
+  forensic_detail: string;
+}
+
+export interface CurlInspectionResultDTO {
+  target_url: string;
+  target_role:
+    | 'PHISHING_DOCUMENT'
+    | 'SAME_SERVER_COLLECTOR_FILE'
+    | 'SAME_SERVER_PARENT_DIRECTORY'
+    | 'EXTERNAL_DROP_ENDPOINT';
+  is_same_server: boolean;
+  curl_command: string;
+  http_status_line: string;
+  status_code: number;
+  response_time_ms: number;
+  response_headers: Array<{ name: string; value: string }>;
+  body_excerpt: string;
+  directory_listing_exposed: boolean;
+  collector_active: boolean;
+  forensic_conclusion: string;
+}
+
+export interface PhishingForensicsDossierDTO {
+  executed: boolean;
+  generated_at: string;
+  is_phishing_or_suspicious: boolean;
+  executive_summary: string;
+  hosting_intel: HostingIntelDTO;
+  whois_rdap: WhoisRdapAuditDTO;
+  exfiltration_destinations: ExfiltrationDestinationDTO[];
+  curl_inspections: CurlInspectionResultDTO[];
+}
+
 export interface ScanReportDTO {
   scan_id: string;
   target_url: string;
@@ -213,6 +302,7 @@ export interface ScanReportDTO {
   };
   link_functionality?: LinkFunctionalityAuditDTO;
   visual_brand_audit?: VisualBrandAuditDTO;
+  phishing_forensics?: PhishingForensicsDossierDTO;
   findings: ScanFindingDTO[];
   source_preview: SourcePreviewLine[];
   integrity_sha256: string;

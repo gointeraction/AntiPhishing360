@@ -955,6 +955,167 @@ async function runVerification() {
 
     console.log('✅ 19. Conexión Funcional del Link (redirecciones/webhooks/SPA) y Comparación de Imágenes Bancarias verificadas.');
 
+    // ========================================================================
+    // 20. EXPEDIENTE FORENSE DE INFRAESTRUCTURA PHISHING (Hosting, WHOIS, Repositorios y cURL)
+    // ========================================================================
+    const forensicPhishRes = await dispatch('/api/v1/scans', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        url: 'http://banesco-verificacion-segura.ejemplo.xyz/login',
+        force_refresh: true,
+      }),
+    });
+    assert.equal(forensicPhishRes.status, 201);
+    const forensicPhishJson = (await forensicPhishRes.json()) as {
+      data: {
+        scan_id: string;
+        risk_level: string;
+        findings: Array<{ rule_code: string }>;
+        phishing_forensics?: {
+          executed: boolean;
+          is_phishing_or_suspicious: boolean;
+          executive_summary: string;
+          hosting_intel: {
+            hosting_provider: string;
+            ip_addresses: string[];
+            asn: string;
+            country: string;
+            nameservers: string[];
+          };
+          whois_rdap: {
+            registrar_name: string;
+            domain_age_days: number | null;
+            abuse_contact_email: string | null;
+            raw_whois_lines: string[];
+          };
+          exfiltration_destinations: Array<{
+            destination_url: string;
+            destination_type: string;
+            is_same_server: boolean;
+            captured_fields: string[];
+            repository_or_collector_id: string;
+          }>;
+          curl_inspections: Array<{
+            target_url: string;
+            target_role: string;
+            is_same_server: boolean;
+            curl_command: string;
+            status_code: number;
+            directory_listing_exposed: boolean;
+            body_excerpt: string;
+          }>;
+        };
+      };
+    };
+
+    const pf = forensicPhishJson.data.phishing_forensics;
+    assert.ok(pf && pf.executed === true, 'phishing_forensics debe ejecutarse en enlaces phishing');
+    assert.equal(pf.is_phishing_or_suspicious, true);
+    assert.ok(pf.hosting_intel.ip_addresses.includes('185.215.113.44'));
+    assert.ok(pf.hosting_intel.hosting_provider.includes('Hosting'));
+    assert.ok(pf.hosting_intel.asn.includes('AS209605'));
+    assert.equal(pf.whois_rdap.registrar_name, 'NameSilo, LLC');
+    assert.equal(pf.whois_rdap.domain_age_days, 3);
+    assert.equal(pf.whois_rdap.abuse_contact_email, 'abuse@namesilo.com');
+    assert.ok(pf.whois_rdap.raw_whois_lines.length >= 6);
+
+    // Exfiltration destinations: Same-server PHP collector + external collector + Base64 atob + GitHub kit repo
+    assert.ok(
+      pf.exfiltration_destinations.some(
+        (d) => d.is_same_server && d.destination_url.includes('/panel/guardar_claves.php')
+      ),
+      'Debe detectar el archivo receptor dentro del mismo servidor (/panel/guardar_claves.php)'
+    );
+    assert.ok(
+      pf.exfiltration_destinations.some((d) => d.destination_url.includes('robo-datos.xyz/keylog')),
+      'Debe decodificar y detectar exfiltración oculta en Base64 atob(...)'
+    );
+    assert.ok(
+      pf.exfiltration_destinations.some((d) => d.destination_url.includes('robo-datos.xyz/captura.php')),
+      'Debe detectar el servidor receptor externo del formulario'
+    );
+
+    // Also verify GitHub repository & Discord webhook detection on clon-visual-banco.ejemplo.app
+    const cloneForensicRes = await dispatch('/api/v1/scans', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        url: 'https://clon-visual-banco.ejemplo.app/acceso',
+        force_refresh: true,
+      }),
+    });
+    assert.equal(cloneForensicRes.status, 201);
+    const cloneForensicJson = (await cloneForensicRes.json()) as {
+      data: {
+        phishing_forensics?: {
+          exfiltration_destinations: Array<{
+            destination_url: string;
+            destination_type: string;
+            is_same_server: boolean;
+          }>;
+        };
+      };
+    };
+    const cloneDests = cloneForensicJson.data.phishing_forensics?.exfiltration_destinations || [];
+    assert.ok(
+      cloneDests.some((d) => d.destination_url.includes('raw.githubusercontent.com')),
+      'Debe detectar repositorios GitHub vinculados al kit de phishing'
+    );
+    assert.ok(
+      cloneDests.some((d) => d.destination_type === 'DISCORD_WEBHOOK'),
+      'Debe detectar Webhooks de Discord usados como buzón de robo'
+    );
+    assert.ok(
+      cloneDests.some((d) => d.is_same_server && d.destination_url.includes('/api/recolector-banca.php')),
+      'Debe detectar el script receptor interno /api/recolector-banca.php'
+    );
+
+    // cURL inspections: Same-server collector file (HTTP 405 POST_REQUIRED) & Same-server parent directory (Index of /panel/)
+    const sameServerFileCurl = pf.curl_inspections.find(
+      (c) => c.target_role === 'SAME_SERVER_COLLECTOR_FILE'
+    );
+    assert.ok(sameServerFileCurl, 'Debe ejecutar consulta cURL al archivo interno del mismo servidor');
+    assert.equal(sameServerFileCurl.is_same_server, true);
+    assert.equal(sameServerFileCurl.status_code, 405);
+    assert.ok(sameServerFileCurl.curl_command.startsWith('curl '));
+
+    const sameServerDirCurl = pf.curl_inspections.find(
+      (c) => c.target_role === 'SAME_SERVER_PARENT_DIRECTORY'
+    );
+    assert.ok(sameServerDirCurl, 'Debe ejecutar consulta cURL al directorio padre en el mismo servidor');
+    assert.equal(sameServerDirCurl.directory_listing_exposed, true);
+    assert.ok(sameServerDirCurl.body_excerpt.includes('Index of /panel/'));
+
+    // Findings emitted from forensic intelligence
+    const forensicRuleCodes = forensicPhishJson.data.findings.map((f) => f.rule_code);
+    assert.ok(forensicRuleCodes.includes('FORENSIC_OPEN_PHISHING_KIT_DIRECTORY'));
+    assert.ok(forensicRuleCodes.includes('FORENSIC_RECENT_WHOIS_DOMAIN'));
+
+    // Verify D1 database persistence (`scan_forensic_dossiers`) when KV cache is cleared
+    await env.KV_CACHE.delete(`scan_id:${forensicPhishJson.data.scan_id}`);
+    const persistedForensicRes = await dispatch(`/api/v1/scans/${forensicPhishJson.data.scan_id}`);
+    assert.equal(persistedForensicRes.status, 200);
+    const persistedForensicJson = (await persistedForensicRes.json()) as {
+      data: {
+        phishing_forensics?: {
+          executed: boolean;
+          whois_rdap: { registrar_name: string };
+          curl_inspections: Array<{ target_role: string }>;
+        };
+      };
+    };
+    assert.equal(persistedForensicJson.data.phishing_forensics?.executed, true);
+    assert.equal(
+      persistedForensicJson.data.phishing_forensics?.whois_rdap.registrar_name,
+      'NameSilo, LLC'
+    );
+    assert.ok(
+      (persistedForensicJson.data.phishing_forensics?.curl_inspections.length || 0) >= 3
+    );
+
+    console.log('✅ 20. Análisis Forense Phishing (Hosting/ASN, WHOIS/RDAP, Repositorios/Destinos y Consultas cURL) verificado.');
+
     console.log('\n🎉 TODAS LAS PRUEBAS DE ARQUITECTURA, SEGURIDAD Y PRODUCTO PASARON EXITOSAMENTE.');
   } finally {
     try {

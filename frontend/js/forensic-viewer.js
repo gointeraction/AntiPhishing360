@@ -62,6 +62,7 @@ async function fetchAndRenderReport(scanId) {
     populateVerdictBanner(loadedReport);
     populateConversionPrompt(loadedReport);
     populateDeepAuditSection(loadedReport);
+    populatePhishingForensicsSection(loadedReport);
     populateFindingsList(loadedReport);
     populateSourceViewer(loadedReport);
     bindReportActions(loadedReport);
@@ -274,6 +275,269 @@ function populateDeepAuditSection(report) {
     }
 
     section.appendChild(card);
+  }
+}
+
+function populatePhishingForensicsSection(report) {
+  const section = document.getElementById('phishing-forensics-dossier-section');
+  if (!section) return;
+
+  const pf = report.phishing_forensics;
+  if (!pf || !pf.executed) {
+    section.style.display = 'none';
+    return;
+  }
+
+  section.style.display = 'block';
+  section.textContent = '';
+
+  const titleRow = document.createElement('div');
+  titleRow.style.marginBottom = '14px';
+
+  const badge = document.createElement('span');
+  badge.className = pf.is_phishing_or_suspicious ? 'badge badge-critical' : 'badge badge-tech';
+  badge.textContent = 'Inteligencia Forense de Infraestructura y Exfiltración';
+
+  const h2 = document.createElement('h2');
+  h2.style.fontSize = '1.42rem';
+  h2.style.marginTop = '8px';
+  h2.textContent = 'Análisis Forense: Hosting, Registros WHOIS, Destinos y Consultas cURL';
+
+  const execSummary = document.createElement('p');
+  execSummary.style.marginTop = '6px';
+  execSummary.style.color = '#CBD5E1';
+  execSummary.style.fontSize = '0.94rem';
+  execSummary.textContent = pf.executive_summary || '';
+
+  titleRow.append(badge, h2, execSummary);
+  section.appendChild(titleRow);
+
+  // 1 & 2. Hosting + WHOIS Grid
+  const topGrid = document.createElement('div');
+  topGrid.className = 'deep-audit-grid';
+  topGrid.style.marginTop = '12px';
+
+  if (pf.hosting_intel) {
+    const h = pf.hosting_intel;
+    const hCard = document.createElement('article');
+    hCard.className = 'deep-audit-report-card';
+
+    const hTag = document.createElement('span');
+    hTag.className = 'badge badge-tech';
+    hTag.textContent = '1. Hosting, Red, DNS y Servidor';
+
+    const hTitle = document.createElement('h3');
+    hTitle.style.marginTop = '10px';
+    hTitle.style.fontSize = '1.08rem';
+    hTitle.textContent = h.hosting_provider;
+
+    const hDesc = document.createElement('p');
+    hDesc.style.marginTop = '6px';
+    hDesc.style.fontSize = '0.9rem';
+    hDesc.style.color = '#E2E8F0';
+    hDesc.textContent = h.infrastructure_notes || '';
+
+    const hMeta = document.createElement('div');
+    hMeta.className = 'deep-audit-report-meta mono';
+    const ips = (h.ip_addresses || []).join(', ') || 'Sin registro A';
+    const ipv6 = h.ipv6_addresses && h.ipv6_addresses.length > 0 ? ` | IPv6: ${h.ipv6_addresses[0]}` : '';
+    const ns = (h.nameservers || []).join(', ') || 'N/A';
+    const cdn = h.cdn_or_waf_behind ? `\nCDN / Proxy: ${h.cdn_or_waf_behind}` : '';
+    hMeta.style.whiteSpace = 'pre-wrap';
+    hMeta.textContent = `Host: ${h.queried_host}\nIPv4: ${ips}${ipv6}\nASN: ${h.asn}\nISP / Org: ${h.isp_organization}\nUbicación: ${h.country} (${h.region_city})\nServidor HTTP: ${h.server_software}\nNameservers: ${ns}${cdn}`;
+
+    hCard.append(hTag, hTitle, hDesc, hMeta);
+    topGrid.appendChild(hCard);
+  }
+
+  if (pf.whois_rdap) {
+    const w = pf.whois_rdap;
+    const wCard = document.createElement('article');
+    const isFreshDomain = w.domain_age_days !== null && w.domain_age_days <= 30;
+    wCard.className = isFreshDomain ? 'deep-audit-report-card impostor' : 'deep-audit-report-card';
+
+    const wTag = document.createElement('span');
+    wTag.className = isFreshDomain ? 'badge badge-critical' : 'badge badge-tech';
+    wTag.textContent =
+      w.domain_age_days !== null
+        ? `2. Registro WHOIS / RDAP (Edad: ${w.domain_age_days} días)`
+        : '2. Registro WHOIS / RDAP';
+
+    const wTitle = document.createElement('h3');
+    wTitle.style.marginTop = '10px';
+    wTitle.style.fontSize = '1.08rem';
+    wTitle.textContent = `Registrador: ${w.registrar_name}`;
+
+    const wDesc = document.createElement('p');
+    wDesc.style.marginTop = '6px';
+    wDesc.style.fontSize = '0.9rem';
+    wDesc.style.color = '#E2E8F0';
+    wDesc.textContent = w.forensic_assessment || '';
+
+    const wMeta = document.createElement('div');
+    wMeta.className = 'deep-audit-report-meta mono';
+    wMeta.style.whiteSpace = 'pre-wrap';
+    wMeta.textContent = [
+      `Dominio Raíz: ${w.queried_domain}`,
+      `Fuente: ${w.lookup_source}`,
+      `Creación: ${w.creation_date || 'No publicada por registro TLD'}`,
+      `Expiración: ${w.expiration_date || 'N/A'}`,
+      `Titular / Org: ${w.registrant_organization}`,
+      `Abuse Email (Takedown): ${w.abuse_contact_email || 'N/A'}${
+        w.abuse_contact_phone ? ` • Tel: ${w.abuse_contact_phone}` : ''
+      }`,
+      `Estados ICANN: ${(w.domain_status || []).join(', ') || 'N/A'}`,
+    ].join('\n');
+
+    wCard.append(wTag, wTitle, wDesc, wMeta);
+
+    if (w.raw_whois_lines && w.raw_whois_lines.length > 0) {
+      const det = document.createElement('details');
+      det.className = 'finding-tech-accordion';
+      const sum = document.createElement('summary');
+      sum.textContent = 'Ver salida cruda WHOIS / RDAP';
+      const pre = document.createElement('pre');
+      pre.className = 'forensic-report-curl-pre mono';
+      pre.textContent = w.raw_whois_lines.join('\n');
+      det.append(sum, pre);
+      wCard.appendChild(det);
+    }
+
+    topGrid.appendChild(wCard);
+  }
+
+  section.appendChild(topGrid);
+
+  // 3. Repositories & Exfiltration Destinations Card
+  const destPanel = document.createElement('article');
+  destPanel.className = 'deep-audit-report-card';
+  destPanel.style.marginTop = '16px';
+
+  const destBadge = document.createElement('span');
+  destBadge.className =
+    pf.exfiltration_destinations && pf.exfiltration_destinations.length > 0
+      ? 'badge badge-critical'
+      : 'badge badge-tech';
+  destBadge.textContent = '3. Repositorios y Destinos de Exfiltración';
+
+  const destHeading = document.createElement('h3');
+  destHeading.style.marginTop = '10px';
+  destHeading.style.fontSize = '1.1rem';
+  destHeading.textContent =
+    'Análisis Minucioso de Destinos donde la Página Envía o Sincroniza la Información';
+
+  destPanel.append(destBadge, destHeading);
+
+  if (!pf.exfiltration_destinations || pf.exfiltration_destinations.length === 0) {
+    const emptyP = document.createElement('p');
+    emptyP.style.marginTop = '8px';
+    emptyP.style.color = '#94A3B8';
+    emptyP.textContent =
+      'No se detectaron formularios activos ni webhooks externos de captura de datos en el documento inspeccionado.';
+    destPanel.appendChild(emptyP);
+  } else {
+    pf.exfiltration_destinations.forEach((d) => {
+      const box = document.createElement('div');
+      box.className = 'forensic-report-dest-item';
+
+      const top = document.createElement('div');
+      top.style.display = 'flex';
+      top.style.flexWrap = 'wrap';
+      top.style.gap = '8px';
+      top.style.alignItems = 'center';
+
+      const relBadge = document.createElement('span');
+      relBadge.className = d.is_same_server ? 'badge badge-warning' : 'badge badge-critical';
+      relBadge.textContent = d.is_same_server
+        ? `ARCHIVO EN EL MISMO SERVIDOR • ${d.http_method}`
+        : `${d.destination_type} • ${d.http_method}`;
+
+      const locSpan = document.createElement('span');
+      locSpan.className = 'mono';
+      locSpan.style.fontSize = '0.78rem';
+      locSpan.style.color = '#94A3B8';
+      locSpan.textContent = d.source_location;
+
+      top.append(relBadge, locSpan);
+
+      const urlDiv = document.createElement('div');
+      urlDiv.className = 'mono';
+      urlDiv.style.marginTop = '8px';
+      urlDiv.style.color = '#00E1FF';
+      urlDiv.style.fontSize = '0.84rem';
+      urlDiv.style.wordBreak = 'break-all';
+      urlDiv.textContent = d.destination_url;
+
+      const expP = document.createElement('p');
+      expP.style.marginTop = '6px';
+      expP.style.fontSize = '0.88rem';
+      expP.style.color = '#F1F5F9';
+      expP.textContent = d.forensic_detail;
+
+      const metaDiv = document.createElement('div');
+      metaDiv.className = 'deep-audit-report-meta mono';
+      const fieldsStr = (d.captured_fields || []).join(', ') || 'N/A';
+      metaDiv.textContent = `Identificador / Repositorio: ${d.repository_or_collector_id} | Campos enviados: [${fieldsStr}] | Red receptora: ${
+        d.resolved_ip_and_asn || 'Mismo host'
+      }`;
+
+      box.append(top, urlDiv, expP, metaDiv);
+      destPanel.appendChild(box);
+    });
+  }
+
+  section.appendChild(destPanel);
+
+  // 4. Terminal Results of cURL Queries on Same-Server Files & Related Endpoints
+  if (pf.curl_inspections && pf.curl_inspections.length > 0) {
+    const curlPanel = document.createElement('article');
+    curlPanel.className = 'deep-audit-report-card';
+    curlPanel.style.marginTop = '16px';
+
+    const curlBadge = document.createElement('span');
+    curlBadge.className = 'badge badge-tech';
+    curlBadge.textContent = '4. Evidencia de Consultas cURL';
+
+    const curlHeading = document.createElement('h3');
+    curlHeading.style.marginTop = '10px';
+    curlHeading.style.fontSize = '1.1rem';
+    curlHeading.textContent =
+      'Resultados de Consultas cURL sobre Archivos del Mismo Servidor y Destinos Relacionados';
+
+    curlPanel.append(curlBadge, curlHeading);
+
+    pf.curl_inspections.forEach((c) => {
+      const termWrap = document.createElement('div');
+      termWrap.className = 'forensic-report-curl-wrap';
+
+      const hdr = document.createElement('div');
+      hdr.className = 'forensic-report-curl-hdr mono';
+      hdr.textContent = `${
+        c.is_same_server ? '[MISMO SERVIDOR]' : '[RECEPTOR EXTERNO]'
+      } ${c.target_role} • Estado HTTP ${c.status_code} • ${c.response_time_ms} ms`;
+
+      const pre = document.createElement('pre');
+      pre.className = 'forensic-report-curl-pre mono';
+      const rawHdrs = (c.response_headers || []).map((h) => `${h.name}: ${h.value}`).join('\n');
+      pre.textContent = [
+        `$ ${c.curl_command}`,
+        c.http_status_line,
+        ...(rawHdrs ? [rawHdrs] : []),
+        '',
+        c.body_excerpt || '(Cuerpo vacío)',
+      ].join('\n');
+
+      const foot = document.createElement('div');
+      foot.className = c.directory_listing_exposed
+        ? 'deep-audit-report-alert mono'
+        : 'deep-audit-report-meta';
+      foot.textContent = `Conclusión Forense cURL: ${c.forensic_conclusion}`;
+
+      termWrap.append(hdr, pre, foot);
+      curlPanel.appendChild(termWrap);
+    });
+
+    section.appendChild(curlPanel);
   }
 }
 

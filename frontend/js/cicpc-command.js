@@ -426,6 +426,61 @@ async function selectAndInspectCase(caseId) {
   const findingsBox = document.getElementById('detail-findings-box');
   if (findingsBox) {
     findingsBox.textContent = '';
+
+    if (report?.phishing_forensics?.executed) {
+      const pf = report.phishing_forensics;
+      const dossierCard = document.createElement('div');
+      dossierCard.className = 'cicpc-meta-box';
+      dossierCard.style.borderLeft = '3px solid #00E1FF';
+      dossierCard.style.marginBottom = '12px';
+
+      const dHead = document.createElement('div');
+      dHead.className = 'mono';
+      dHead.style.fontSize = '0.8rem';
+      dHead.style.color = '#00E1FF';
+      dHead.textContent = 'INTELIGENCIA FORENSE: HOSTING • WHOIS • DESTINOS • CONSULTAS cURL';
+
+      const dSummary = document.createElement('div');
+      dSummary.style.marginTop = '6px';
+      dSummary.style.fontSize = '0.86rem';
+      dSummary.style.whiteSpace = 'pre-wrap';
+      const ips = (pf.hosting_intel?.ip_addresses || []).join(', ') || 'N/A';
+      const destList = (pf.exfiltration_destinations || [])
+        .map(
+          (d) =>
+            `• [${d.is_same_server ? 'MISMO SERVIDOR' : d.destination_type}] ${d.http_method} ${d.destination_url} (${d.repository_or_collector_id})`
+        )
+        .join('\n');
+      dSummary.textContent = [
+        `Hosting: ${pf.hosting_intel?.hosting_provider} | IP: ${ips} | ${pf.hosting_intel?.asn} | País: ${pf.hosting_intel?.country}`,
+        `WHOIS: ${pf.whois_rdap?.registrar_name} | Creación: ${pf.whois_rdap?.creation_date || 'N/A'} (Edad: ${pf.whois_rdap?.domain_age_days ?? 'N/A'} días) | Abuse: ${pf.whois_rdap?.abuse_contact_email || 'N/A'}`,
+        ...(destList ? [`Destinos de exfiltración:\n${destList}`] : []),
+      ].join('\n');
+
+      dossierCard.append(dHead, dSummary);
+
+      if (pf.curl_inspections && pf.curl_inspections.length > 0) {
+        const curlPre = document.createElement('pre');
+        curlPre.className = 'mono';
+        curlPre.style.marginTop = '8px';
+        curlPre.style.padding = '8px';
+        curlPre.style.background = '#010818';
+        curlPre.style.borderRadius = '6px';
+        curlPre.style.fontSize = '0.75rem';
+        curlPre.style.color = '#A5F3FC';
+        curlPre.style.overflowX = 'auto';
+        curlPre.textContent = pf.curl_inspections
+          .map(
+            (c) =>
+              `$ ${c.curl_command}\n${c.http_status_line}\n${c.body_excerpt}\n-> ${c.forensic_conclusion}`
+          )
+          .join('\n\n');
+        dossierCard.appendChild(curlPre);
+      }
+
+      findingsBox.appendChild(dossierCard);
+    }
+
     const findings = report?.findings || [];
     if (findings.length === 0) {
       const p = document.createElement('p');

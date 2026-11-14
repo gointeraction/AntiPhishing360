@@ -7,6 +7,7 @@ import { JsAnalyzerService } from '../services/js-analyzer.service.ts';
 import { AntiphishingCtiService } from '../services/url-heuristics.service.ts';
 import { LinkFunctionalityService } from '../services/link-functionality.service.ts';
 import { BankVisualComparatorService } from '../services/bank-visual-comparator.service.ts';
+import { PhishingForensicsService } from '../services/phishing-forensics.service.ts';
 import { ScoringService } from '../services/scoring.service.ts';
 import { ScanRepository } from '../repositories/scan.repository.ts';
 import { CicpcRepository } from '../repositories/cicpc.repository.ts';
@@ -84,7 +85,7 @@ export class ScanController {
 
     const normalizedUrl = validatedUrl.toString();
     const urlHash = await CryptoService.sha256Hex(`${normalizedUrl}|${deviceProfile}`);
-    const kvUrlKey = `scan_url:v3:${urlHash}`;
+    const kvUrlKey = `scan_url:v4:${urlHash}`;
 
     // Check KV cache (TTL 15 min = 900s) when forceRefresh is false and anonymous
     if (!forceRefresh && !rc.user) {
@@ -255,12 +256,83 @@ export class ScanController {
         transport.isHttps
       ),
     ];
-    const evaluation = ScoringService.evaluate(
+    let evaluation = ScoringService.evaluate(
       transport,
       domFindings,
       jsFindings,
       urlCtiFindings
     );
+
+    // Step B.3: Deep Phishing Infrastructure Forensics (Hosting/ASN/DNS, WHOIS/RDAP, Exfiltration Repos & cURL Probes)
+    const shouldRunForensics =
+      evaluation.riskLevel !== 'SAFE' ||
+      Boolean(body.include_forensics) ||
+      !AntiphishingCtiService.isOfficialWhitelistedDomain(transport.targetDomain);
+
+    let phishingForensics = undefined;
+    if (shouldRunForensics) {
+      phishingForensics = await PhishingForensicsService.buildForensicDossier({
+        finalUrl: transport.finalUrl,
+        targetDomain: transport.targetDomain,
+        riskLevel: evaluation.riskLevel,
+        riskScore: evaluation.riskScore,
+        transport,
+        bundleCorpus: linkProbe.combinedBundleCorpus,
+        kv: rc.env.KV_CACHE,
+      });
+
+      let extraForensicFindingsAdded = false;
+      const exposedDir = phishingForensics.curl_inspections.find(
+        (c) => c.directory_listing_exposed
+      );
+      if (exposedDir) {
+        jsFindings.push({
+          id: CryptoService.generateUlid('fnd'),
+          rule_code: 'FORENSIC_OPEN_PHISHING_KIT_DIRECTORY',
+          category: 'TRANSPORT',
+          severity: 'CRITICAL',
+          line_number: 1,
+          column_number: 1,
+          dom_selector: 'curl:same-server-directory',
+          citizen_explanation:
+            'Nuestro análisis forense cURL descubrió carpetas internas abiertas en el mismo servidor con archivos para recolectar y guardar claves de víctimas.',
+          technical_detail: `Directorio abierto ("Index of /") confirmado mediante consulta cURL en ${exposedDir.target_url}.`,
+          code_snippet: exposedDir.curl_command,
+        });
+        extraForensicFindingsAdded = true;
+      }
+
+      const ageDays = phishingForensics.whois_rdap.domain_age_days;
+      if (
+        ageDays !== null &&
+        ageDays <= 21 &&
+        !AntiphishingCtiService.isOfficialWhitelistedDomain(transport.targetDomain)
+      ) {
+        urlCtiFindings.push({
+          id: CryptoService.generateUlid('fnd'),
+          rule_code: 'FORENSIC_RECENT_WHOIS_DOMAIN',
+          category: 'TRANSPORT',
+          severity: linkProbe.audit.login_or_financial_form_active ? 'CRITICAL' : 'HIGH',
+          line_number: 1,
+          column_number: 1,
+          dom_selector: 'whois:creation-date',
+          citizen_explanation: `Los registros WHOIS revelan que esta dirección web fue comprada hace apenas ${ageDays} día(s). Los bancos reales tienen años de trayectoria, no páginas recién creadas.`,
+          technical_detail: `Dominio de creación reciente (${ageDays} días) registrado en ${phishingForensics.whois_rdap.registrar_name}.`,
+          code_snippet: `WHOIS Creation Date: ${phishingForensics.whois_rdap.creation_date} (${ageDays}d)`,
+        });
+        extraForensicFindingsAdded = true;
+      }
+
+      if (extraForensicFindingsAdded) {
+        evaluation = ScoringService.evaluate(
+          transport,
+          domFindings,
+          jsFindings,
+          urlCtiFindings
+        );
+        phishingForensics.is_phishing_or_suspicious = evaluation.riskLevel !== 'SAFE';
+      }
+    }
 
     const scanId = CryptoService.generateUlid('scn');
     const scannedAt = new Date().toISOString().replace(/\.\d{3}Z$/, 'Z');
@@ -309,6 +381,7 @@ export class ScanController {
       },
       link_functionality: linkProbe.audit,
       visual_brand_audit: visualComparison.audit,
+      phishing_forensics: phishingForensics,
       findings: evaluation.allFindings,
       source_preview: evaluation.sourcePreview,
       integrity_sha256: integritySha256,
@@ -338,7 +411,9 @@ export class ScanController {
         impersonatedEntity:
           visualComparison.audit.detected_institution || 'Detección Forense Automática Rayos X',
         incidentImpact: 'PREVENTIVE',
-        citizenStatement: `Alerta automática del motor Detector360: ${report.citizen_verdict.title}`,
+        citizenStatement: phishingForensics
+          ? `Alerta automática Detector360: ${report.citizen_verdict.title} | Hosting: ${phishingForensics.hosting_intel.hosting_provider} (${phishingForensics.hosting_intel.asn}) | WHOIS: ${phishingForensics.whois_rdap.registrar_name}`
+          : `Alerta automática del motor Detector360: ${report.citizen_verdict.title}`,
       });
     }
 

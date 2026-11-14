@@ -1,6 +1,7 @@
 import type {
   D1Database,
   LinkFunctionalityAuditDTO,
+  PhishingForensicsDossierDTO,
   RiskLevel,
   ScanFindingDTO,
   ScanReportDTO,
@@ -125,6 +126,18 @@ export class ScanRepository {
       );
     }
 
+    if (r.phishing_forensics) {
+      statements.push(
+        this.db
+          .prepare(
+            `INSERT OR REPLACE INTO scan_forensic_dossiers (
+              scan_id, phishing_forensics_json, created_at
+            ) VALUES (?, ?, ?)`
+          )
+          .bind(r.scan_id, JSON.stringify(r.phishing_forensics), r.scanned_at)
+      );
+    }
+
     await this.db.batch(statements);
   }
 
@@ -142,6 +155,13 @@ export class ScanRepository {
       )
       .bind(scanId)
       .first<{ link_functionality_json: string; visual_brand_audit_json: string }>();
+
+    const dossierRow = await this.db
+      .prepare(
+        'SELECT phishing_forensics_json FROM scan_forensic_dossiers WHERE scan_id = ? LIMIT 1'
+      )
+      .bind(scanId)
+      .first<{ phishing_forensics_json: string }>();
 
     const findingsResult = await this.db
       .prepare(
@@ -187,6 +207,15 @@ export class ScanRepository {
       }
     }
 
+    let phishingForensics: PhishingForensicsDossierDTO | undefined;
+    if (dossierRow) {
+      try {
+        phishingForensics = JSON.parse(dossierRow.phishing_forensics_json) || undefined;
+      } catch {
+        phishingForensics = undefined;
+      }
+    }
+
     return {
       scan_id: row.id,
       target_url: row.target_url,
@@ -214,6 +243,7 @@ export class ScanRepository {
       },
       link_functionality: linkFunctionality,
       visual_brand_audit: visualBrandAudit,
+      phishing_forensics: phishingForensics,
       findings: findingsResult.results ?? [],
       source_preview: sourcePreview,
       integrity_sha256: row.integrity_sha256,

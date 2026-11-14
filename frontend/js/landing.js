@@ -356,6 +356,11 @@ function renderInstantVerdict(report) {
     card.appendChild(deepPanel);
   }
 
+  const forensicsPanel = buildPhishingForensicsDossierPanel(report);
+  if (forensicsPanel) {
+    card.appendChild(forensicsPanel);
+  }
+
   const actionsBar = document.createElement('div');
   actionsBar.className = 'instant-actions-bar';
 
@@ -501,6 +506,205 @@ function buildDeepLinkAndBankVisualPanel(report) {
   }
 
   return grid;
+}
+
+function buildPhishingForensicsDossierPanel(report) {
+  const pf = report.phishing_forensics;
+  if (!pf || !pf.executed) return null;
+
+  const detailsWrap = document.createElement('details');
+  detailsWrap.className = 'forensic-dossier-inline';
+  if (report.risk_level !== 'SAFE') {
+    detailsWrap.open = true;
+  }
+
+  const summary = document.createElement('summary');
+  summary.className = 'forensic-dossier-summary';
+  summary.textContent =
+    'Expediente Forense Profundo: Hosting, Registros WHOIS, Destinos de Datos y Consultas cURL';
+  detailsWrap.appendChild(summary);
+
+  const body = document.createElement('div');
+  body.className = 'forensic-dossier-body';
+
+  const execP = document.createElement('p');
+  execP.className = 'deep-audit-subtext';
+  execP.textContent = pf.executive_summary || '';
+  body.appendChild(execP);
+
+  // 1 & 2. Hosting + WHOIS Grid
+  const topGrid = document.createElement('div');
+  topGrid.className = 'deep-audit-inline-grid';
+
+  if (pf.hosting_intel) {
+    const h = pf.hosting_intel;
+    const hCard = document.createElement('div');
+    hCard.className = 'deep-audit-subcard';
+
+    const hBadge = document.createElement('span');
+    hBadge.className = 'badge badge-tech';
+    hBadge.textContent = '1. Hosting, IP, ASN y Servidor';
+
+    const hMain = document.createElement('p');
+    hMain.className = 'deep-audit-subtext';
+    hMain.textContent = `${h.hosting_provider} (${h.country}${
+      h.region_city && h.region_city !== 'N/A' ? ` • ${h.region_city}` : ''
+    })`;
+
+    const hMeta = document.createElement('div');
+    hMeta.className = 'deep-audit-meta mono';
+    const ipTxt = h.ip_addresses && h.ip_addresses.length > 0 ? h.ip_addresses.join(', ') : 'Sin IP pública';
+    hMeta.textContent = `IP: ${ipTxt} | Red: ${h.asn} | Software: ${h.server_software} | NS: ${
+      (h.nameservers || []).slice(0, 2).join(', ') || 'N/A'
+    }`;
+
+    hCard.append(hBadge, hMain, hMeta);
+    topGrid.appendChild(hCard);
+  }
+
+  if (pf.whois_rdap) {
+    const w = pf.whois_rdap;
+    const wCard = document.createElement('div');
+    wCard.className =
+      w.domain_age_days !== null && w.domain_age_days <= 30
+        ? 'deep-audit-subcard impostor-alert'
+        : 'deep-audit-subcard';
+
+    const wBadge = document.createElement('span');
+    wBadge.className =
+      w.domain_age_days !== null && w.domain_age_days <= 30
+        ? 'badge badge-critical'
+        : 'badge badge-tech';
+    wBadge.textContent =
+      w.domain_age_days !== null
+        ? `2. Registro WHOIS (Antigüedad: ${w.domain_age_days} días)`
+        : '2. Registro WHOIS / RDAP';
+
+    const wMain = document.createElement('p');
+    wMain.className = 'deep-audit-subtext';
+    wMain.textContent = w.forensic_assessment || `Registrador: ${w.registrar_name}`;
+
+    const wMeta = document.createElement('div');
+    wMeta.className = 'deep-audit-meta mono';
+    wMeta.textContent = `Dominio: ${w.queried_domain} | Registrador: ${w.registrar_name} | Creación: ${
+      w.creation_date || 'Protegida por TLD'
+    } | Abuse: ${w.abuse_contact_email || 'N/A'}`;
+
+    wCard.append(wBadge, wMain, wMeta);
+
+    if (w.raw_whois_lines && w.raw_whois_lines.length > 0) {
+      const rawDet = document.createElement('details');
+      rawDet.style.marginTop = '8px';
+      const rawSum = document.createElement('summary');
+      rawSum.className = 'mono';
+      rawSum.style.fontSize = '0.76rem';
+      rawSum.style.color = '#00E1FF';
+      rawSum.style.cursor = 'pointer';
+      rawSum.textContent = 'Ver registro WHOIS / RDAP completo';
+      const rawPre = document.createElement('pre');
+      rawPre.className = 'forensic-curl-pre mono';
+      rawPre.textContent = w.raw_whois_lines.join('\n');
+      rawDet.append(rawSum, rawPre);
+      wCard.appendChild(rawDet);
+    }
+
+    topGrid.appendChild(wCard);
+  }
+
+  body.appendChild(topGrid);
+
+  // 3. Exfiltration Destinations & Repositories
+  if (pf.exfiltration_destinations && pf.exfiltration_destinations.length > 0) {
+    const destBlock = document.createElement('div');
+    destBlock.className = 'forensic-subblock';
+
+    const destTitle = document.createElement('strong');
+    destTitle.className = 'forensic-subblock-title';
+    destTitle.textContent = `3. Repositorios y Destinos donde Envía la Información (${pf.exfiltration_destinations.length})`;
+    destBlock.appendChild(destTitle);
+
+    pf.exfiltration_destinations.forEach((d) => {
+      const item = document.createElement('div');
+      item.className = 'forensic-dest-row';
+
+      const pill = document.createElement('span');
+      pill.className = d.is_same_server ? 'badge badge-warning' : 'badge badge-critical';
+      pill.textContent = d.is_same_server
+        ? `MISMO SERVIDOR (${d.http_method})`
+        : `${d.destination_type} (${d.http_method})`;
+
+      const urlSpan = document.createElement('div');
+      urlSpan.className = 'mono';
+      urlSpan.style.fontSize = '0.8rem';
+      urlSpan.style.color = '#F8FAFC';
+      urlSpan.style.marginTop = '6px';
+      urlSpan.style.wordBreak = 'break-all';
+      urlSpan.textContent = `Destino: ${d.destination_url}`;
+
+      const detailP = document.createElement('div');
+      detailP.className = 'deep-audit-meta';
+      const fieldsTxt =
+        d.captured_fields && d.captured_fields.length > 0
+          ? ` | Campos capturados: [${d.captured_fields.join(', ')}]`
+          : '';
+      const ipTxt = d.resolved_ip_and_asn ? ` | Red destino: ${d.resolved_ip_and_asn}` : '';
+      detailP.textContent = `${d.repository_or_collector_id} • Origen: ${d.source_location}${fieldsTxt}${ipTxt}`;
+
+      item.append(pill, urlSpan, detailP);
+      destBlock.appendChild(item);
+    });
+
+    body.appendChild(destBlock);
+  }
+
+  // 4. cURL Inspections (Same-Server Files, Parent Directories & Drop Endpoints)
+  if (pf.curl_inspections && pf.curl_inspections.length > 0) {
+    const curlBlock = document.createElement('div');
+    curlBlock.className = 'forensic-subblock';
+
+    const curlTitle = document.createElement('strong');
+    curlTitle.className = 'forensic-subblock-title';
+    curlTitle.textContent = `4. Resultados de Consultas cURL al Servidor y Archivos Relacionados (${pf.curl_inspections.length})`;
+    curlBlock.appendChild(curlTitle);
+
+    pf.curl_inspections.forEach((c) => {
+      const term = document.createElement('div');
+      term.className = 'forensic-curl-card';
+
+      const roleTag = document.createElement('div');
+      roleTag.className = 'forensic-curl-header mono';
+      roleTag.textContent = `${
+        c.is_same_server ? '[ARCHIVO / RUTA EN EL MISMO SERVIDOR]' : '[SERVIDOR EXTERNO]'
+      } ${c.target_role} • ${c.response_time_ms} ms`;
+
+      const pre = document.createElement('pre');
+      pre.className = 'forensic-curl-pre mono';
+      const hdrLines = (c.response_headers || [])
+        .map((h) => `${h.name}: ${h.value}`)
+        .join('\n');
+      pre.textContent = [
+        `$ ${c.curl_command}`,
+        c.http_status_line,
+        ...(hdrLines ? [hdrLines] : []),
+        '',
+        c.body_excerpt || '(Sin cuerpo visible)',
+      ].join('\n');
+
+      const concl = document.createElement('div');
+      concl.className = c.directory_listing_exposed
+        ? 'deep-audit-meta danger'
+        : 'deep-audit-meta';
+      concl.textContent = `Dictamen cURL: ${c.forensic_conclusion}`;
+
+      term.append(roleTag, pre, concl);
+      curlBlock.appendChild(term);
+    });
+
+    body.appendChild(curlBlock);
+  }
+
+  detailsWrap.appendChild(body);
+  return detailsWrap;
 }
 
 function initXraySimulator() {
