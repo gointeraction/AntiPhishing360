@@ -5,7 +5,7 @@
 ![Arquitectura](https://img.shields.io/badge/Edge-Cloudflare_Pages_%2B_Workers-0066FF?style=for-the-badge)
 ![Base de Datos](https://img.shields.io/badge/Database-Cloudflare_D1_(SQLite)-0A3D91?style=for-the-badge)
 ![Seguridad](https://img.shields.io/badge/DOM_XSS-Zero_innerHTML-00E1FF?style=for-the-badge)
-![Suite de Pruebas](https://img.shields.io/badge/Tests-17%2F17_Passing-10B981?style=for-the-badge)
+![Suite de Pruebas](https://img.shields.io/badge/Tests-18%2F18_Passing-10B981?style=for-the-badge)
 
 ![Banner Red de Apoyo Familiar Ángel Guardián — Detector360](frontend/assets/images/banner-red-familiar-angel-guardian.jpg)
 
@@ -27,7 +27,7 @@
 6. [Referencia Completa de Endpoints REST (`/api/v1`)](#6-referencia-completa-de-endpoints-rest-apiv1)
 7. [Instalación y Ejecución Local Instantánea](#7-instalación-y-ejecución-local-instantánea)
 8. [Credenciales de Prueba (Entorno Local de Demostración)](#8-credenciales-de-prueba-entorno-local-de-demostración)
-9. [Suite Automatizada de Verificación (`17/17`) y CI/CD](#9-suite-automatizada-de-verificación-1717-y-cicd)
+9. [Suite Automatizada de Verificación (`18/18`) y CI/CD](#9-suite-automatizada-de-verificación-1818-y-cicd)
 10. [Despliegue en Producción (Cloudflare Edge)](#10-despliegue-en-producción-cloudflare-edge)
 11. [Créditos y Referencias Técnicas](#11-créditos-y-referencias-técnicas)
 
@@ -347,7 +347,7 @@ La migración `0003_cicpc_command_module.sql` aprovisiona dos perfiles instituci
 
 ---
 
-## 9. Suite Automatizada de Verificación (`17/17`) y CI/CD
+## 9. Suite Automatizada de Verificación (`18/18`) y CI/CD
 
 Para ejecutar la auditoría automatizada completa de extremo a extremo:
 
@@ -356,7 +356,7 @@ npm test
 # equivalente a: node tests/verify-all.ts
 ```
 
-La suite valida **17 bloques críticos** sobre una base de datos efímera aislada:
+La suite valida **18 bloques críticos** sobre una base de datos efímera aislada:
 1. Rutas limpias Frontend, PWA Manifest, Service Worker y cabeceras CSP/HSTS.
 2. Feed comercial en vivo y ofuscación preventiva de dominios (`[.]`).
 3. Bloqueo estricto Anti-SSRF (`localhost`, `127.0.0.1`, `169.254.169.254`, `192.168.x.x`, `10.x.x.x`, `[::1]`, `file://`, `javascript:`).
@@ -374,6 +374,7 @@ La suite valida **17 bloques críticos** sobre una base de datos efímera aislad
 15. Motor heurístico predictivo Day-Zero (`julioliraup/Antiphishing`: Typosquatting Damerau-Levenshtein, IDN Punycode, IPv4 literal, `@` userinfo, defensa ante servidores caídos y exportación de reglas Suricata IDS/IPS `sid:6090001+`).
 16. Suite Integral Adulto Mayor: `/guardian`, `camera=(self)`, analizador psicológico de mensajes/capturas, flujo completo Ángel Guardián, Directorio Blanco Oficial, simulador de 3 casos reales y protocolo de emergencia bancaria + C.I.C.P.C `URGENT`.
 17. Portal de Acceso del Familiar (`/familiar`): aislamiento criptográfico de sesión `__Host-d360_family_session`, login con vínculo `FAM-ABUELO-2026`, recepción en vivo de novedades de QR y consultas 1-toque, respuesta desde el dashboard sincronizada con el adulto mayor, envío de mensajes tranquilizadores directos y creación de nuevos vínculos familiares.
+18. Diseño 100% Responsive Móvil (`320px–430px`): `viewport-fit=cover` en las 10 vistas HTML, cajón táctil móvil con cierre automático, botones multi-línea sin truncamiento, inputs `>= 16px` anti-zoom en iOS/Android, *safe-area insets* y cero desbordamiento horizontal.
 
 Cada *push* o *Pull Request* hacia `main` ejecuta automáticamente esta suite mediante GitHub Actions (`.github/workflows/ci-security.yml`).
 

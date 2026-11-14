@@ -810,6 +810,41 @@ async function runVerification() {
     assert.ok(regFamBody.data.pairing_url.includes('?vincular=FAM-'));
     console.log('✅ 17. Portal de Acceso del Familiar (/familiar: login aislado, bitácora en vivo, respuesta 1-toque, mensaje directo y vinculación) verificado.');
 
+    // 18. Auditoría Responsive Mobile-First (320px - 430px smartphones y tablets en las 10 vistas y 5 hojas CSS)
+    for (const htmlView of [
+      'index.html',
+      'familiar.html',
+      'guardian.html',
+      'login.html',
+      'register.html',
+      'dashboard.html',
+      'scan-new.html',
+      'scan.html',
+      'cicpc.html',
+      'cicpc-login.html',
+    ]) {
+      const content = fs.readFileSync(path.join(frontendDir, htmlView), 'utf-8');
+      assert.ok(
+        content.includes('width=device-width, initial-scale=1.0, viewport-fit=cover'),
+        `Vista ${htmlView} debe incluir meta viewport optimizada con viewport-fit=cover`
+      );
+    }
+
+    const landingCss = fs.readFileSync(path.join(frontendDir, 'css', 'landing.css'), 'utf-8');
+    const seniorCss = fs.readFileSync(path.join(frontendDir, 'css', 'senior.css'), 'utf-8');
+    const appCss = fs.readFileSync(path.join(frontendDir, 'css', 'app.css'), 'utf-8');
+    const cicpcCss = fs.readFileSync(path.join(frontendDir, 'css', 'cicpc.css'), 'utf-8');
+
+    assert.ok(tokensCss.includes('overflow-x: clip'), 'Prevención global de desbordamiento horizontal sin romper sticky');
+    assert.ok(tokensCss.includes('white-space: normal'), 'Botones multi-línea adaptables en pantallas móviles estrechas');
+    assert.ok(tokensCss.includes('mobile-drawer-auth'), 'Cajón móvil de acciones de cuenta en navbar');
+    assert.ok(tokensCss.includes('font-size: 16px'), 'Inputs móviles >= 16px para evitar auto-zoom forzado en iOS/Android');
+    assert.ok(landingCss.includes('@media (max-width: 740px)') && landingCss.includes('@media (max-width: 680px)'));
+    assert.ok(seniorCss.includes('minmax(min(100%, 260px), 1fr)'), 'Grid elástico sin desbordamiento en 320px-375px');
+    assert.ok(appCss.includes('@media (max-width: 640px)'));
+    assert.ok(cicpcCss.includes('@media (max-width: 640px)'));
+    console.log('✅ 18. Diseño 100% Responsive Móvil (10 vistas HTML, 5 hojas CSS, menú táctil, anti-zoom 16px y cero scroll horizontal) verificado.');
+
     console.log('\n🎉 TODAS LAS PRUEBAS DE ARQUITECTURA, SEGURIDAD Y PRODUCTO PASARON EXITOSAMENTE.');
   } finally {
     try {

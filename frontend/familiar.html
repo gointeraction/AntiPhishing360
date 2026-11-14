@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="robots" content="noindex, nofollow">
   <title>Acceso Familiar Ángel Guardián — Monitoreo del Adulto Mayor | Detector360</title>
 
@@ -11,9 +11,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Montserrat:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="/css/tokens.css?v=2.8">
-  <link rel="stylesheet" href="/css/landing.css?v=2.8">
-  <link rel="stylesheet" href="/css/senior.css?v=2.8">
+  <link rel="stylesheet" href="/css/tokens.css?v=2.9">
+  <link rel="stylesheet" href="/css/landing.css?v=2.9">
+  <link rel="stylesheet" href="/css/senior.css?v=2.9">
 </head>
 <body class="cyber-grid-bg pcb-section-bg" style="min-height:100vh;">
 
@@ -29,22 +29,29 @@
           </span>
         </a>
 
-        <nav class="nav-links" aria-label="Navegación portal familiar">
+        <nav id="navbar-links" class="nav-links" aria-label="Navegación portal familiar">
           <a href="/">Escáner Principal</a>
           <a href="/#escudo-adulto-mayor">Modo Adulto Mayor</a>
         </nav>
 
         <div class="nav-actions">
           <button type="button" id="btn-family-logout" class="btn btn-ghost btn-sm" style="display:none;">
-            <span>Cerrar Sesión Familiar</span>
+            <span>Cerrar Sesión</span>
           </button>
-          <a href="/" class="btn btn-outline-cyan btn-sm">Volver al Inicio</a>
+          <a href="/" class="btn btn-outline-cyan btn-sm">Inicio</a>
+          <button id="mobile-menu-btn" type="button" class="mobile-menu-toggle" aria-label="Abrir menú de navegación" aria-expanded="false">
+            <svg class="icon-svg" viewBox="0 0 24 24" aria-hidden="true">
+              <line x1="4" y1="7" x2="20" y2="7"></line>
+              <line x1="4" y1="12" x2="20" y2="12"></line>
+              <line x1="4" y1="17" x2="20" y2="17"></line>
+            </svg>
+          </button>
         </div>
       </div>
     </header>
   </div>
 
-  <main class="container" style="padding: 42px 20px 84px;">
+  <main class="container" style="padding-top: 24px; padding-bottom: 64px;">
 
     <!-- 1. PUERTA DE ACCESO Y REGISTRO DE VÍNCULO FAMILIAR -->
     <section id="family-auth-gate" aria-label="Acceso para hijos, nietos y familiares de confianza">
@@ -272,6 +279,6 @@
     </section>
   </main>
 
-  <script type="module" src="/js/familiar-portal.js?v=2.8"></script>
+  <script type="module" src="/js/familiar-portal.js?v=2.9"></script>
 </body>
 </html>

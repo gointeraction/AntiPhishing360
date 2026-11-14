@@ -52,11 +52,40 @@
   color: #FFFFFF;
 }
 
+@media (max-width: 680px) {
+  .senior-mode-nav-btn,
+  .emergency-top-pill {
+    padding: 6px 10px;
+    font-size: 0.74rem;
+    gap: 5px;
+    min-height: 36px;
+  }
+}
+
+@media (max-width: 460px) {
+  .senior-mode-nav-btn [data-senior-label] {
+    max-width: 96px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .emergency-top-pill span {
+    display: none;
+  }
+}
+
 /* --------------------------------------------------------------------------
    MODO ADULTO MAYOR / LETRA GRANDE (html.senior-mode)
    -------------------------------------------------------------------------- */
 html.senior-mode {
   font-size: 118%;
+}
+
+@media (max-width: 640px) {
+  html.senior-mode {
+    font-size: 108%;
+  }
 }
 
 html.senior-mode body {
@@ -366,7 +395,7 @@ html.senior-mode .senior-giant-paste-bar {
 /* Directorio Blanco Verificado */
 .directory-results-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
   gap: 16px;
   margin-top: 8px;
 }
@@ -379,12 +408,15 @@ html.senior-mode .senior-giant-paste-bar {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  min-width: 0;
 }
 
 .directory-domain-pill {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  max-width: 100%;
+  word-break: break-all;
   padding: 6px 12px;
   border-radius: 10px;
   background: rgba(16, 185, 129, 0.16);
@@ -557,5 +589,84 @@ html.senior-mode .senior-giant-paste-bar {
   flex-wrap: wrap;
   align-items: center;
   gap: 10px;
+}
+
+@media (max-width: 680px) {
+  .senior-hub-section {
+    padding: 44px 0;
+  }
+
+  .senior-bento-grid {
+    gap: 16px;
+    margin-top: 24px;
+  }
+
+  .senior-module-card {
+    padding: 18px 15px;
+    border-radius: 18px;
+    min-width: 0;
+  }
+
+  .senior-hub-top-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .senior-hub-top-actions .btn {
+    width: 100%;
+  }
+
+  .senior-verdict-assist-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .senior-verdict-assist-bar .btn {
+    width: 100%;
+  }
+
+  .directory-call-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .directory-call-row .btn {
+    width: 100%;
+  }
+
+  .senior-giant-paste-cta {
+    flex: 1 1 100%;
+    min-height: 60px;
+    padding: 14px 16px;
+    font-size: 1.02rem;
+  }
+
+  .senior-semaphore-banner {
+    padding: 18px 14px;
+  }
+
+  .sim-message-bubble {
+    padding: 15px;
+    font-size: 0.98rem;
+  }
+
+  .midpage-widescreen-dock {
+    padding: 14px 0;
+  }
+
+  .midpage-dock-summary {
+    align-items: flex-start;
+    font-size: 0.88rem;
+  }
+
+  .midpage-dock-actions {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .midpage-dock-actions .btn {
+    width: 100%;
+  }
 }
 

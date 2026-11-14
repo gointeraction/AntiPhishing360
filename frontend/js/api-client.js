@@ -312,15 +312,81 @@ export function clearPendingScanId() {
   }
 }
 
+function renderMobileDrawerAuth(user = null) {
+  const navLinks = document.getElementById('navbar-links');
+  if (!navLinks) return;
+
+  let drawerBox = navLinks.querySelector('.mobile-drawer-auth');
+  if (!drawerBox) {
+    drawerBox = document.createElement('div');
+    drawerBox.className = 'mobile-drawer-auth';
+    navLinks.appendChild(drawerBox);
+  }
+  drawerBox.textContent = '';
+
+  if (user) {
+    const dashLink = document.createElement('a');
+    dashLink.href = '/dashboard';
+    dashLink.className = 'btn btn-outline-cyan btn-sm';
+    dashLink.textContent = `Escudo de ${user.alias}`;
+
+    const logoutBtn = document.createElement('button');
+    logoutBtn.type = 'button';
+    logoutBtn.className = 'btn btn-ghost btn-sm';
+    logoutBtn.textContent = 'Cerrar Sesión';
+    logoutBtn.addEventListener('click', async () => {
+      await ApiClient.logout();
+      window.location.href = '/';
+    });
+
+    drawerBox.append(dashLink, logoutBtn);
+  } else if (document.getElementById('navbar-auth-actions')) {
+    const loginLink = document.createElement('a');
+    loginLink.href = '/login';
+    loginLink.className = 'btn btn-ghost btn-sm';
+    loginLink.textContent = 'Iniciar Sesión';
+
+    const regLink = document.createElement('a');
+    regLink.href = '/register';
+    regLink.className = 'btn btn-outline-cyan btn-sm';
+    regLink.textContent = 'Crear Cuenta Gratis';
+
+    drawerBox.append(loginLink, regLink);
+  }
+}
+
 export function initMobileNavbar() {
   const toggleBtn = document.getElementById('mobile-menu-btn');
   const navLinks = document.getElementById('navbar-links');
-  if (toggleBtn && navLinks) {
-    toggleBtn.addEventListener('click', () => {
-      const expanded = navLinks.classList.toggle('open');
-      toggleBtn.setAttribute('aria-expanded', String(expanded));
-    });
-  }
+  if (!toggleBtn || !navLinks) return;
+
+  renderMobileDrawerAuth(null);
+
+  const closeMenu = () => {
+    navLinks.classList.remove('open');
+    toggleBtn.setAttribute('aria-expanded', 'false');
+  };
+
+  toggleBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const expanded = navLinks.classList.toggle('open');
+    toggleBtn.setAttribute('aria-expanded', String(expanded));
+  });
+
+  navLinks.addEventListener('click', (e) => {
+    const target = e.target;
+    if (target instanceof Element && target.closest('a')) {
+      closeMenu();
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!navLinks.classList.contains('open')) return;
+    const target = e.target;
+    if (target instanceof Element && !target.closest('.navbar')) {
+      closeMenu();
+    }
+  });
 }
 
 export async function syncNavbarAuth() {
@@ -348,11 +414,13 @@ export async function syncNavbarAuth() {
       });
 
       actionsWrap.append(dashLink, logoutBtn);
+      renderMobileDrawerAuth(user);
       return user;
     }
   } catch {
     // Anonymous visitor — keep default Login / Register buttons
   }
+  renderMobileDrawerAuth(null);
   return null;
 }
 

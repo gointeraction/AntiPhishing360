@@ -188,8 +188,59 @@ body.cicpc-command-body {
 }
 
 @media (max-width: 640px) {
+  .cicpc-security-classification-bar {
+    font-size: 0.66rem;
+    letter-spacing: 0.04em;
+    padding: 7px 10px;
+  }
+
+  .cicpc-auth-shell {
+    margin: 18px auto 44px;
+    gap: 20px;
+  }
+
+  .cicpc-emblem-vault {
+    max-width: 180px;
+  }
+
   .cicpc-kpi-grid {
     grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .cicpc-kpi-card {
+    padding: 13px 12px;
+  }
+
+  .cicpc-kpi-value {
+    font-size: 1.55rem;
+  }
+
+  .cicpc-panel-card {
+    padding: 16px 14px;
+    border-radius: 16px;
+  }
+
+  .cicpc-filters-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .cicpc-topbar-inner > div:last-child {
+    width: 100%;
+  }
+
+  .cicpc-topbar-inner .btn {
+    flex: 1 1 calc(50% - 6px);
+  }
+
+  .cicpc-officer-pill {
+    width: 100%;
+  }
+}
+
+@media (max-width: 370px) {
+  .cicpc-kpi-grid {
+    grid-template-columns: 1fr;
   }
 }
 

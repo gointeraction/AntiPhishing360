@@ -110,11 +110,32 @@
 
 @media (max-width: 768px) {
   .widescreen-cinema-hero {
-    min-height: 78svh;
-    padding-bottom: 18px;
+    min-height: 64svh;
+    margin-top: -78px;
+    padding-top: 84px;
+    padding-bottom: 14px;
   }
+
   .widescreen-cinema-dock {
-    padding: 14px 16px;
+    padding: 14px;
+    border-radius: 16px;
+    gap: 12px;
+  }
+
+  .cinema-dock-controls {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .cinema-dock-controls #hero-cinema-scan-cta {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+
+  .cinema-dock-controls .btn {
+    width: 100%;
   }
 }
 
@@ -445,11 +466,62 @@
 }
 
 @media (max-width: 740px) {
+  .corporate-hero-atmosphere {
+    padding-top: 16px;
+    padding-bottom: 44px;
+  }
+
+  .hero-institutional-card {
+    padding: 20px 16px;
+    border-radius: 18px;
+  }
+
+  .hero-institutional-logo {
+    max-width: 188px;
+  }
+
+  .scanner-box {
+    padding: 14px;
+    border-radius: 16px;
+  }
+
   .scanner-form-row {
     flex-direction: column;
+    gap: 10px;
+  }
+
+  .scanner-url-input {
+    height: 52px;
+    font-size: 16px;
+    padding: 0 88px 0 40px;
+  }
+
+  .scanner-leading-icon {
+    left: 12px;
+  }
+
+  .paste-inline-btn {
+    right: 6px;
+    height: 38px;
+    padding: 0 10px;
+    font-size: 0.78rem;
   }
 
   .scanner-submit-btn {
+    width: 100%;
+    height: 52px;
+  }
+
+  .instant-verdict-card {
+    padding: 16px;
+  }
+
+  .instant-actions-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .instant-actions-bar .btn {
     width: 100%;
   }
 }
@@ -1945,13 +2017,93 @@
 @media (max-width: 860px) {
   .footer-cicpc-showcase {
     grid-template-columns: 1fr;
-    padding: 24px 20px;
-    gap: 24px;
+    padding: 24px 18px;
+    gap: 22px;
   }
 
   .footer-cicpc-video-frame,
   .footer-cicpc-controls-dock {
-    max-width: 230px;
+    max-width: 220px;
+  }
+}
+
+@media (max-width: 680px) {
+  .section-header {
+    margin-bottom: 32px;
+  }
+
+  .center-stage-duel,
+  .community-editorial-split {
+    padding: 16px;
+    border-radius: 18px;
+  }
+
+  .xray-toggle-box,
+  .browser-viewport,
+  .fake-bank-card {
+    padding: 14px;
+  }
+
+  .fake-address-bar {
+    min-width: 0;
+    overflow-x: auto;
+    font-size: 0.72rem;
+    padding: 6px 10px;
+  }
+
+  .xray-code-reveal {
+    overflow-x: auto;
+    word-break: break-word;
+    font-size: 0.74rem;
+  }
+
+  .scam-card,
+  .threat-card,
+  .plan-card {
+    padding: 20px 16px;
+    border-radius: 16px;
+  }
+
+  .faq-item {
+    padding: 14px 16px;
+  }
+
+  .final-cta-banner {
+    padding: 34px 18px;
+    border-radius: 20px;
+  }
+
+  .final-cta-actions {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .final-cta-actions .btn {
+    width: 100%;
+  }
+
+  .footer-cicpc-actions {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .footer-cicpc-actions .btn {
+    width: 100%;
+  }
+
+  .footer-grid {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 18px;
+  }
+
+  .footer-links {
+    gap: 14px 18px;
+  }
+
+  .footer-ribbon-inner {
+    font-size: 0.72rem;
+    line-height: 1.45;
   }
 }
 

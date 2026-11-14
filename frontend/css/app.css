@@ -663,6 +663,93 @@ body {
   gap: var(--space-md);
 }
 
+@media (max-width: 640px) {
+  .auth-card,
+  .advanced-scan-card {
+    padding: 22px 16px;
+    border-radius: 18px;
+  }
+
+  .register-page-wrap {
+    padding: 16px 12px 42px;
+  }
+
+  .dashboard-sidebar {
+    padding: 14px;
+    gap: 14px;
+  }
+
+  .sidebar-nav {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .sidebar-link {
+    padding: 8px 10px;
+    font-size: 0.82rem;
+    gap: 8px;
+  }
+
+  .dash-quick-scan,
+  .history-card,
+  .stat-card {
+    padding: 18px 15px;
+    border-radius: 16px;
+  }
+
+  #dash-quick-scan-form input {
+    min-width: 0 !important;
+    flex: 1 1 100% !important;
+  }
+
+  #dash-quick-scan-form .btn {
+    width: 100%;
+  }
+
+  .verdict-hero-banner {
+    padding: 20px 16px;
+    gap: 18px;
+    border-radius: 18px;
+  }
+
+  .report-actions-toolbar {
+    padding: 14px;
+  }
+
+  .report-actions-toolbar > div {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .report-actions-toolbar .btn {
+    width: 100%;
+  }
+
+  .finding-card {
+    padding: 16px 14px;
+  }
+
+  .clarity-survey-box {
+    padding: 16px;
+  }
+
+  .clarity-survey-box > div:last-child {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .clarity-survey-box .btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 420px) {
+  .sidebar-nav {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media print {
   body {
     background: #FFFFFF !important;

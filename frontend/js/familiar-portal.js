@@ -1,4 +1,4 @@
-import { ApiClient, formatRelativeTime, showToast } from './api-client.js';
+import { ApiClient, formatRelativeTime, initMobileNavbar, showToast } from './api-client.js';
 
 const EVENT_TYPE_LABELS = {
   ASK_GUARDIAN: 'Duda en 1 Toque del Adulto Mayor',
@@ -22,6 +22,7 @@ let currentProfile = null;
 let autoRefreshTimer = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
+  initMobileNavbar();
   bindAuthForms();
   bindDashboardControls();
   await tryLoadActiveSession();
