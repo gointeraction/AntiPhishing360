@@ -1,9 +1,11 @@
 import type {
   D1Database,
+  LinkFunctionalityAuditDTO,
   RiskLevel,
   ScanFindingDTO,
   ScanReportDTO,
   SourcePreviewLine,
+  VisualBrandAuditDTO,
 } from '../types.ts';
 
 interface ScanRow {
@@ -106,6 +108,23 @@ export class ScanRepository {
       );
     }
 
+    if (r.link_functionality || r.visual_brand_audit) {
+      statements.push(
+        this.db
+          .prepare(
+            `INSERT OR REPLACE INTO scan_deep_audits (
+              scan_id, link_functionality_json, visual_brand_audit_json, created_at
+            ) VALUES (?, ?, ?, ?)`
+          )
+          .bind(
+            r.scan_id,
+            JSON.stringify(r.link_functionality || null),
+            JSON.stringify(r.visual_brand_audit || null),
+            r.scanned_at
+          )
+      );
+    }
+
     await this.db.batch(statements);
   }
 
@@ -116,6 +135,13 @@ export class ScanRepository {
       .first<ScanRow>();
 
     if (!row) return null;
+
+    const deepRow = await this.db
+      .prepare(
+        'SELECT link_functionality_json, visual_brand_audit_json FROM scan_deep_audits WHERE scan_id = ? LIMIT 1'
+      )
+      .bind(scanId)
+      .first<{ link_functionality_json: string; visual_brand_audit_json: string }>();
 
     const findingsResult = await this.db
       .prepare(
@@ -146,6 +172,21 @@ export class ScanRepository {
       sourcePreview = [];
     }
 
+    let linkFunctionality: LinkFunctionalityAuditDTO | undefined;
+    let visualBrandAudit: VisualBrandAuditDTO | undefined;
+    if (deepRow) {
+      try {
+        linkFunctionality = JSON.parse(deepRow.link_functionality_json) || undefined;
+      } catch {
+        linkFunctionality = undefined;
+      }
+      try {
+        visualBrandAudit = JSON.parse(deepRow.visual_brand_audit_json) || undefined;
+      } catch {
+        visualBrandAudit = undefined;
+      }
+    }
+
     return {
       scan_id: row.id,
       target_url: row.target_url,
@@ -171,6 +212,8 @@ export class ScanRepository {
           x_frame_options: row.has_x_frame_options === 1,
         },
       },
+      link_functionality: linkFunctionality,
+      visual_brand_audit: visualBrandAudit,
       findings: findingsResult.results ?? [],
       source_preview: sourcePreview,
       integrity_sha256: row.integrity_sha256,

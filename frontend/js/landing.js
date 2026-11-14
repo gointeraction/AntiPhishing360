@@ -351,6 +351,11 @@ function renderInstantVerdict(report) {
   }
   card.appendChild(ul);
 
+  const deepPanel = buildDeepLinkAndBankVisualPanel(report);
+  if (deepPanel) {
+    card.appendChild(deepPanel);
+  }
+
   const actionsBar = document.createElement('div');
   actionsBar.className = 'instant-actions-bar';
 
@@ -403,6 +408,99 @@ function renderInstantVerdict(report) {
   card.appendChild(actionsBar);
   card.appendChild(buildSeniorAssistActionsBar(report));
   handlePostVerdictSeniorProtections(report);
+}
+
+function buildDeepLinkAndBankVisualPanel(report) {
+  const linkFn = report.link_functionality;
+  const vis = report.visual_brand_audit;
+  if (!linkFn && !vis) return null;
+
+  const grid = document.createElement('div');
+  grid.className = 'deep-audit-inline-grid';
+
+  if (linkFn) {
+    const fnCard = document.createElement('div');
+    fnCard.className = 'deep-audit-subcard';
+
+    const tag = document.createElement('span');
+    tag.className =
+      linkFn.functionality_status === 'CLOAKED_CLIENT_REDIRECT' ||
+      (linkFn.exfiltration_endpoints && linkFn.exfiltration_endpoints.length > 0)
+        ? 'badge badge-critical'
+        : linkFn.reachable
+        ? 'badge badge-tech'
+        : 'badge badge-warning';
+    tag.textContent = linkFn.reachable
+      ? `Conexión Funcional: HTTP ${linkFn.http_status_code} (${linkFn.response_time_ms} ms)`
+      : 'Conexión Funcional: Servidor Inactivo / Caído';
+
+    const p = document.createElement('p');
+    p.className = 'deep-audit-subtext';
+    p.textContent = linkFn.summary || '';
+
+    fnCard.append(tag, p);
+
+    if (linkFn.resolved_final_url && linkFn.resolved_final_url !== linkFn.initial_url) {
+      const dest = document.createElement('div');
+      dest.className = 'deep-audit-meta mono';
+      dest.textContent = `Destino real desenmascarado: ${linkFn.resolved_final_url}`;
+      fnCard.appendChild(dest);
+    }
+
+    if (linkFn.exfiltration_endpoints && linkFn.exfiltration_endpoints.length > 0) {
+      const exfil = document.createElement('div');
+      exfil.className = 'deep-audit-meta danger mono';
+      exfil.textContent = `Captura activa detectada: ${linkFn.exfiltration_endpoints[0]}`;
+      fnCard.appendChild(exfil);
+    }
+
+    grid.appendChild(fnCard);
+  }
+
+  if (vis) {
+    const visCard = document.createElement('div');
+    const isImpostor = vis.is_official_bank_page === false;
+    const isOfficial = vis.is_official_bank_page === true;
+    visCard.className = isImpostor
+      ? 'deep-audit-subcard impostor-alert'
+      : 'deep-audit-subcard';
+
+    const tag = document.createElement('span');
+    tag.className = isImpostor
+      ? 'badge badge-critical'
+      : isOfficial
+      ? 'badge badge-safe'
+      : 'badge badge-tech';
+    tag.textContent = vis.verdict_label || 'Comparación Visual Bancaria';
+
+    const p = document.createElement('p');
+    p.className = 'deep-audit-subtext';
+    p.textContent = vis.verdict_summary || '';
+
+    visCard.append(tag, p);
+
+    if (vis.detected_institution) {
+      const meta = document.createElement('div');
+      meta.className = isImpostor ? 'deep-audit-meta danger' : 'deep-audit-meta';
+      const expectedTxt = vis.official_domain_expected
+        ? ` | Portal oficial legítimo: ${vis.official_domain_expected}`
+        : '';
+      meta.textContent = `Entidad: ${vis.detected_institution} | Imágenes auditadas: ${vis.images_inspected_count}${expectedTxt}`;
+      visCard.appendChild(meta);
+    }
+
+    if (vis.matched_assets && vis.matched_assets.length > 0) {
+      const firstMatch = vis.matched_assets[0];
+      const hashLine = document.createElement('div');
+      hashLine.className = 'deep-audit-meta mono';
+      hashLine.textContent = `Evidencia gráfica: ${firstMatch.match_method} (Similitud ${firstMatch.similarity_percent}% • Hash ${firstMatch.sha256_prefix})`;
+      visCard.appendChild(hashLine);
+    }
+
+    grid.appendChild(visCard);
+  }
+
+  return grid;
 }
 
 function initXraySimulator() {

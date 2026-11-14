@@ -61,6 +61,7 @@ async function fetchAndRenderReport(scanId) {
 
     populateVerdictBanner(loadedReport);
     populateConversionPrompt(loadedReport);
+    populateDeepAuditSection(loadedReport);
     populateFindingsList(loadedReport);
     populateSourceViewer(loadedReport);
     bindReportActions(loadedReport);
@@ -167,6 +168,112 @@ function populateConversionPrompt(report) {
     }
   } else {
     box.style.display = 'none';
+  }
+}
+
+function populateDeepAuditSection(report) {
+  const section = document.getElementById('deep-audit-grid-section');
+  if (!section) return;
+
+  const linkFn = report.link_functionality;
+  const vis = report.visual_brand_audit;
+  if (!linkFn && !vis) {
+    section.style.display = 'none';
+    return;
+  }
+
+  section.style.display = 'grid';
+  section.textContent = '';
+
+  if (linkFn) {
+    const card = document.createElement('article');
+    card.className = 'deep-audit-report-card';
+
+    const badge = document.createElement('span');
+    badge.className =
+      linkFn.functionality_status === 'CLOAKED_CLIENT_REDIRECT' ||
+      (linkFn.exfiltration_endpoints && linkFn.exfiltration_endpoints.length > 0)
+        ? 'badge badge-critical'
+        : linkFn.reachable
+        ? 'badge badge-tech'
+        : 'badge badge-warning';
+    badge.textContent = linkFn.reachable
+      ? `Funcionalidad del Enlace: ACTIVO (HTTP ${linkFn.http_status_code} • ${linkFn.response_time_ms} ms)`
+      : 'Funcionalidad del Enlace: INACTIVO / DADO DE BAJA';
+
+    const title = document.createElement('h3');
+    title.style.marginTop = '10px';
+    title.style.fontSize = '1.08rem';
+    title.textContent = 'Conexión en Vivo de Verificación del Link';
+
+    const desc = document.createElement('p');
+    desc.style.marginTop = '6px';
+    desc.style.color = '#E2E8F0';
+    desc.style.fontSize = '0.92rem';
+    desc.textContent = linkFn.summary || '';
+
+    const metaList = document.createElement('div');
+    metaList.className = 'deep-audit-report-meta mono';
+    metaList.textContent = `Destino final: ${linkFn.resolved_final_url} | Saltos: ${linkFn.redirect_hops} | Bundles JS revisados: ${linkFn.spa_bundles_inspected}`;
+
+    card.append(badge, title, desc, metaList);
+
+    if (linkFn.exfiltration_endpoints && linkFn.exfiltration_endpoints.length > 0) {
+      const exfilBox = document.createElement('div');
+      exfilBox.className = 'deep-audit-report-alert mono';
+      exfilBox.textContent = `Receptor malicioso activo: ${linkFn.exfiltration_endpoints.join(' | ')}`;
+      card.appendChild(exfilBox);
+    }
+
+    section.appendChild(card);
+  }
+
+  if (vis) {
+    const isImpostor = vis.is_official_bank_page === false;
+    const isOfficial = vis.is_official_bank_page === true;
+
+    const card = document.createElement('article');
+    card.className = isImpostor
+      ? 'deep-audit-report-card impostor'
+      : 'deep-audit-report-card';
+
+    const badge = document.createElement('span');
+    badge.className = isImpostor
+      ? 'badge badge-critical'
+      : isOfficial
+      ? 'badge badge-safe'
+      : 'badge badge-tech';
+    badge.textContent = vis.verdict_label || 'Auditoría de Imágenes Bancarias';
+
+    const title = document.createElement('h3');
+    title.style.marginTop = '10px';
+    title.style.fontSize = '1.08rem';
+    title.textContent = 'Comparación de Imágenes e Identidad Bancaria';
+
+    const desc = document.createElement('p');
+    desc.style.marginTop = '6px';
+    desc.style.color = '#E2E8F0';
+    desc.style.fontSize = '0.92rem';
+    desc.textContent = vis.verdict_summary || '';
+
+    const metaList = document.createElement('div');
+    metaList.className = 'deep-audit-report-meta mono';
+    const instTxt = vis.detected_institution || 'Ninguna entidad reclamada';
+    const officialTxt = vis.official_domain_expected || 'N/A';
+    metaList.textContent = `Entidad: ${instTxt} | Dominio oficial esperado: ${officialTxt} | Imágenes revisadas: ${vis.images_inspected_count}`;
+
+    card.append(badge, title, desc, metaList);
+
+    if (vis.matched_assets && vis.matched_assets.length > 0) {
+      vis.matched_assets.forEach((asset) => {
+        const assetLine = document.createElement('div');
+        assetLine.className = 'deep-audit-report-alert mono';
+        assetLine.textContent = `[${asset.asset_type}] ${asset.match_method} (${asset.similarity_percent}% similitud • SHA256:${asset.sha256_prefix}) -> ${asset.asset_url}`;
+        card.appendChild(assetLine);
+      });
+    }
+
+    section.appendChild(card);
   }
 }
 

@@ -117,6 +117,9 @@ export interface TransportAuditResult {
   isHttps: boolean;
   httpStatusCode: number;
   redirectCount: number;
+  responseTimeMs?: number;
+  contentType?: string;
+  redirectChain?: string[];
   securityHeaders: {
     strict_transport_security: boolean;
     content_security_policy: boolean;
@@ -124,6 +127,63 @@ export interface TransportAuditResult {
   };
   htmlContent: string;
   simulatedDemo: boolean;
+}
+
+export type LinkFunctionalityStatus =
+  | 'ONLINE_FUNCTIONAL'
+  | 'REDIRECT_UNMASKED'
+  | 'CLOAKED_CLIENT_REDIRECT'
+  | 'BOT_WAF_PROTECTED'
+  | 'INACTIVE_OR_TAKEDOWN';
+
+export interface LinkFunctionalityAuditDTO {
+  checked_live: boolean;
+  reachable: boolean;
+  is_functional: boolean;
+  functionality_status: LinkFunctionalityStatus;
+  http_status_code: number;
+  response_time_ms: number;
+  content_type: string;
+  initial_url: string;
+  resolved_final_url: string;
+  redirect_hops: number;
+  redirect_chain: string[];
+  client_redirect_detected: boolean;
+  client_redirect_target: string | null;
+  spa_bundles_inspected: number;
+  login_or_financial_form_active: boolean;
+  exfiltration_endpoints: string[];
+  summary: string;
+}
+
+export interface MatchedBankVisualAssetDTO {
+  asset_url: string;
+  asset_type: 'favicon' | 'logo_img' | 'og_image' | 'inline_svg' | 'css_or_bundle';
+  claimed_bank: string;
+  match_method:
+    | 'EXACT_OFFICIAL_SHA256'
+    | 'PERCEPTUAL_HASH_SIMILARITY'
+    | 'HOTLINKED_OFFICIAL_BANK_CDN'
+    | 'SVG_OR_LOGO_SIGNATURE'
+    | 'DYNAMIC_BANK_BRAND_MISMATCH';
+  similarity_percent: number;
+  sha256_prefix: string;
+  dimensions: string | null;
+}
+
+export interface VisualBrandAuditDTO {
+  executed: boolean;
+  banking_brand_detected: boolean;
+  is_official_bank_page: boolean | null;
+  detected_institution: string | null;
+  official_domain_expected: string | null;
+  inspected_domain: string;
+  images_inspected_count: number;
+  official_reference_compared: boolean;
+  highest_similarity_percent: number;
+  matched_assets: MatchedBankVisualAssetDTO[];
+  verdict_label: string;
+  verdict_summary: string;
 }
 
 export interface ScanReportDTO {
@@ -151,6 +211,8 @@ export interface ScanReportDTO {
       x_frame_options: boolean;
     };
   };
+  link_functionality?: LinkFunctionalityAuditDTO;
+  visual_brand_audit?: VisualBrandAuditDTO;
   findings: ScanFindingDTO[];
   source_preview: SourcePreviewLine[];
   integrity_sha256: string;

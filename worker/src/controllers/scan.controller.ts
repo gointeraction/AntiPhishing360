@@ -1,10 +1,12 @@
-import type { RequestContext, ScanReportDTO } from '../types.ts';
+import type { RequestContext, ScanReportDTO, TransportAuditResult } from '../types.ts';
 import { CryptoService } from '../services/crypto.service.ts';
 import { SsrfGuardService, SsrfViolationError } from '../services/ssrf-guard.service.ts';
 import { TransportFetchError, TransportService } from '../services/transport.service.ts';
 import { DomParserService } from '../services/dom-parser.service.ts';
 import { JsAnalyzerService } from '../services/js-analyzer.service.ts';
 import { AntiphishingCtiService } from '../services/url-heuristics.service.ts';
+import { LinkFunctionalityService } from '../services/link-functionality.service.ts';
+import { BankVisualComparatorService } from '../services/bank-visual-comparator.service.ts';
 import { ScoringService } from '../services/scoring.service.ts';
 import { ScanRepository } from '../repositories/scan.repository.ts';
 import { CicpcRepository } from '../repositories/cicpc.repository.ts';
@@ -82,7 +84,7 @@ export class ScanController {
 
     const normalizedUrl = validatedUrl.toString();
     const urlHash = await CryptoService.sha256Hex(`${normalizedUrl}|${deviceProfile}`);
-    const kvUrlKey = `scan_url:${urlHash}`;
+    const kvUrlKey = `scan_url:v3:${urlHash}`;
 
     // Check KV cache (TTL 15 min = 900s) when forceRefresh is false and anonymous
     if (!forceRefresh && !rc.user) {
@@ -133,30 +135,19 @@ export class ScanController {
       rc.env.KV_CACHE
     );
 
-    // Step B: Live Forensic Audit (Transport + DOM + JS + Scoring) with Day-Zero Predictive Fallback
-    let transport;
+    // Step B: Live Connection, Link Functionality Probe & Visual Bank Brand Comparison
+    let rawTransport: TransportAuditResult | null = null;
+    let unreachableReason = '';
+
     try {
       try {
-        transport = await TransportService.fetchAndAudit(normalizedUrl, deviceProfile);
+        rawTransport = await TransportService.fetchAndAudit(normalizedUrl, deviceProfile);
       } catch (firstErr) {
         if (autoPrefixedHttps && firstErr instanceof TransportFetchError) {
           const httpFallbackUrl = normalizedUrl.replace(/^https:\/\//i, 'http://');
-          transport = await TransportService.fetchAndAudit(httpFallbackUrl, deviceProfile);
+          rawTransport = await TransportService.fetchAndAudit(httpFallbackUrl, deviceProfile);
         } else {
           throw firstErr;
-        }
-      }
-      if (transport.finalUrl && transport.finalUrl !== validatedInitialUrl.toString()) {
-        const finalUrlFindings = await AntiphishingCtiService.analyzeUrl(
-          transport.finalUrl,
-          rc.env.KV_CACHE
-        );
-        const seenRules = new Set(urlCtiFindings.map((f) => f.rule_code));
-        for (const ff of finalUrlFindings) {
-          if (!seenRules.has(ff.rule_code)) {
-            urlCtiFindings.push(ff);
-            seenRules.add(ff.rule_code);
-          }
         }
       }
     } catch (err) {
@@ -172,30 +163,8 @@ export class ScanController {
           400
         );
       }
-      // Day-Zero Predictive Defense: If the host is newly registered / offline / cloaking bots,
-      // yet URL heuristics detected typosquatting, homoglyphs or brand impersonation, protect the citizen!
-      if (err instanceof TransportFetchError && urlCtiFindings.length > 0) {
-        const isHttps = validatedInitialUrl.protocol === 'https:';
-        transport = {
-          finalUrl: validatedInitialUrl.toString(),
-          targetDomain: validatedInitialUrl.hostname.toLowerCase(),
-          protocol: isHttps ? ('https' as const) : ('http' as const),
-          isHttps,
-          httpStatusCode: 0,
-          redirectCount: 0,
-          securityHeaders: {
-            strict_transport_security: false,
-            content_security_policy: false,
-            x_frame_options: false,
-          },
-          htmlContent: [
-            `<!-- Detector360 x Antiphishing CTI (Evaluación Predictiva Day-Zero) -->`,
-            `<!-- URL inspeccionada: ${validatedInitialUrl.toString()} -->`,
-            `<!-- El servidor remoto aún no sirve HTML público o aplica evasión/cloaking, pero la estructura del dominio fue interceptada preventivamente. -->`,
-          ].join('\n'),
-          simulatedDemo: true,
-        };
-      } else if (
+
+      if (
         err instanceof TransportFetchError &&
         AntiphishingCtiService.isOfficialWhitelistedDomain(validatedInitialUrl.hostname)
       ) {
@@ -205,13 +174,16 @@ export class ScanController {
         const safeUrl = isHttps
           ? validatedInitialUrl.toString().replace(/^http:\/\//i, 'https://')
           : validatedInitialUrl.toString();
-        transport = {
+        rawTransport = {
           finalUrl: safeUrl,
           targetDomain: officialHost,
           protocol: isHttps ? ('https' as const) : ('http' as const),
           isHttps,
           httpStatusCode: 200,
           redirectCount: 0,
+          responseTimeMs: 65,
+          contentType: 'text/html',
+          redirectChain: [safeUrl],
           securityHeaders: {
             strict_transport_security: isHttps,
             content_security_policy: true,
@@ -223,37 +195,66 @@ export class ScanController {
           ].join('\n'),
           simulatedDemo: true,
         };
-      } else if (err instanceof TransportFetchError) {
-        return jsonResponse(
-          {
-            success: false,
-            error: {
-              code: err.code,
-              message: err.message,
-            },
-          },
-          err.statusCode
-        );
       } else {
-        return jsonResponse(
-          {
-            success: false,
-            error: {
-              code: 'SCAN_FAILED',
-              message: 'No fue posible completar la inspección del enlace en este momento.',
-            },
-          },
-          502
-        );
+        unreachableReason =
+          err instanceof Error
+            ? err.message
+            : 'Servidor sin respuesta durante verificación funcional activa.';
+        rawTransport = null;
       }
     }
 
-    const domFindings = DomParserService.analyzeHtml(
-      transport.htmlContent,
-      transport.finalUrl,
-      transport.isHttps
-    );
-    const jsFindings = JsAnalyzerService.analyzeScripts(transport.htmlContent, transport.isHttps);
+    // Step B.1: Execute Live Link Functionality Probe (client-side redirects, SPA JS bundles, exfiltration webhooks)
+    const linkProbe = await LinkFunctionalityService.verifyAndInspect({
+      initialUrl: normalizedUrl,
+      transport: rawTransport,
+      unreachableReason,
+      deviceProfile,
+    });
+    const transport = linkProbe.effectiveTransport;
+
+    // Re-run URL CTI heuristics if HTTP or client-side redirect landed on a different final URL
+    if (transport.finalUrl && transport.finalUrl !== validatedInitialUrl.toString()) {
+      const finalUrlFindings = await AntiphishingCtiService.analyzeUrl(
+        transport.finalUrl,
+        rc.env.KV_CACHE
+      );
+      const seenRules = new Set(urlCtiFindings.map((f) => f.rule_code));
+      for (const ff of finalUrlFindings) {
+        if (!seenRules.has(ff.rule_code)) {
+          urlCtiFindings.push(ff);
+          seenRules.add(ff.rule_code);
+        }
+      }
+    }
+
+    // Step B.2: Execute Banking Image & Visual Brand Comparison (compares logos/favicons/SVGs of ANY bank)
+    const visualComparison = await BankVisualComparatorService.compareAndAudit({
+      htmlContent: transport.htmlContent,
+      bundleCorpus: linkProbe.combinedBundleCorpus,
+      finalUrl: transport.finalUrl,
+      targetDomain: transport.targetDomain,
+      simulatedDemo: transport.simulatedDemo,
+      kv: rc.env.KV_CACHE,
+    });
+
+    const domFindings = [
+      ...visualComparison.findings,
+      ...DomParserService.analyzeHtml(
+        transport.htmlContent,
+        transport.finalUrl,
+        transport.isHttps
+      ),
+    ];
+    const jsFindings = [
+      ...linkProbe.findings,
+      ...JsAnalyzerService.analyzeScripts(
+        linkProbe.combinedBundleCorpus
+          ? `${transport.htmlContent}\n<script>${linkProbe.combinedBundleCorpus}</script>`
+          : transport.htmlContent,
+        transport.isHttps
+      ),
+    ];
     const evaluation = ScoringService.evaluate(
       transport,
       domFindings,
@@ -306,6 +307,8 @@ export class ScanController {
         redirect_count: transport.redirectCount,
         security_headers: transport.securityHeaders,
       },
+      link_functionality: linkProbe.audit,
+      visual_brand_audit: visualComparison.audit,
       findings: evaluation.allFindings,
       source_preview: evaluation.sourcePreview,
       integrity_sha256: integritySha256,
@@ -332,7 +335,8 @@ export class ScanController {
         riskScore: report.risk_score,
         riskLevel: report.risk_level,
         channelReceived: 'web',
-        impersonatedEntity: 'Detección Forense Automática Rayos X',
+        impersonatedEntity:
+          visualComparison.audit.detected_institution || 'Detección Forense Automática Rayos X',
         incidentImpact: 'PREVENTIVE',
         citizenStatement: `Alerta automática del motor Detector360: ${report.citizen_verdict.title}`,
       });

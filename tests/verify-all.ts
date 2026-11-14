@@ -4,6 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createEdgeEnv, handleEdgeRequest } from '../dev-server.ts';
 import { AntiphishingCtiService } from '../worker/src/services/url-heuristics.service.ts';
+import { BankVisualComparatorService } from '../worker/src/services/bank-visual-comparator.service.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -844,6 +845,115 @@ async function runVerification() {
     assert.ok(appCss.includes('@media (max-width: 640px)'));
     assert.ok(cicpcCss.includes('@media (max-width: 640px)'));
     console.log('✅ 18. Diseño 100% Responsive Móvil (10 vistas HTML, 5 hojas CSS, menú táctil, anti-zoom 16px y cero scroll horizontal) verificado.');
+
+    // 19. Verificación Funcional en Vivo del Enlace + Comparador de Imágenes de Cualquier Institución Bancaria
+    const cloakedBankRes = await dispatch('/api/v1/scans', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        url: 'https://redir-bono-oculto.ejemplo.app/promo',
+        force_refresh: true,
+      }),
+    });
+    assert.equal(cloakedBankRes.status, 201);
+    const cloakedBankJson = (await cloakedBankRes.json()) as {
+      data: {
+        scan_id: string;
+        risk_level: string;
+        risk_score: number;
+        link_functionality: {
+          checked_live: boolean;
+          reachable: boolean;
+          functionality_status: string;
+          client_redirect_detected: boolean;
+          resolved_final_url: string;
+          exfiltration_endpoints: string[];
+        };
+        visual_brand_audit: {
+          banking_brand_detected: boolean;
+          is_official_bank_page: boolean | null;
+          detected_institution: string | null;
+          official_domain_expected: string | null;
+          matched_assets: Array<{ match_method: string; similarity_percent: number }>;
+        };
+        findings: Array<{ rule_code: string }>;
+      };
+    };
+    assert.equal(cloakedBankJson.data.risk_level, 'CRITICAL');
+    assert.ok(cloakedBankJson.data.risk_score >= 90);
+    assert.equal(cloakedBankJson.data.link_functionality.checked_live, true);
+    assert.equal(cloakedBankJson.data.link_functionality.client_redirect_detected, true);
+    assert.ok(
+      cloakedBankJson.data.link_functionality.resolved_final_url.includes(
+        'clon-visual-banco.ejemplo.app'
+      )
+    );
+    assert.ok(cloakedBankJson.data.link_functionality.exfiltration_endpoints.length >= 1);
+    assert.equal(cloakedBankJson.data.visual_brand_audit.banking_brand_detected, true);
+    assert.equal(cloakedBankJson.data.visual_brand_audit.is_official_bank_page, false);
+    assert.ok(
+      (cloakedBankJson.data.visual_brand_audit.detected_institution || '').includes('Banesco')
+    );
+    assert.equal(cloakedBankJson.data.visual_brand_audit.official_domain_expected, 'banesco.com');
+    assert.ok(cloakedBankJson.data.visual_brand_audit.matched_assets.length >= 2);
+    const cloakedRules = cloakedBankJson.data.findings.map((f) => f.rule_code);
+    assert.ok(cloakedRules.includes('VISUAL_BANK_IMAGE_IMPERSONATION'));
+    assert.ok(cloakedRules.includes('TELEGRAM_OR_WEBHOOK_EXFILTRATION'));
+    assert.ok(cloakedRules.includes('CLOAKED_CLIENT_SIDE_REDIRECT'));
+
+    // Dynamic "Any Bank" Visual Detection (regional/new bank not in static preset list) + D1 persistence
+    const dynBankRes = await dispatch('/api/v1/scans', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        url: 'https://portal-clientes-seguro.ejemplo.app/login',
+        force_refresh: true,
+      }),
+    });
+    assert.equal(dynBankRes.status, 201);
+    const dynBankJson = (await dynBankRes.json()) as {
+      data: {
+        scan_id: string;
+        risk_level: string;
+        visual_brand_audit: {
+          is_official_bank_page: boolean | null;
+          detected_institution: string | null;
+          matched_assets: Array<{ match_method: string }>;
+        };
+      };
+    };
+    assert.equal(dynBankJson.data.risk_level, 'CRITICAL');
+    assert.equal(dynBankJson.data.visual_brand_audit.is_official_bank_page, false);
+    assert.ok(
+      (dynBankJson.data.visual_brand_audit.detected_institution || '').includes('Banco Atlántida')
+    );
+
+    // Clear KV cache and read from D1 (`scan_deep_audits`) to verify full persistence
+    await env.KV_CACHE.delete(`scan_id:${dynBankJson.data.scan_id}`);
+    const persistedDeepRes = await dispatch(`/api/v1/scans/${dynBankJson.data.scan_id}`);
+    assert.equal(persistedDeepRes.status, 200);
+    const persistedDeepJson = (await persistedDeepRes.json()) as {
+      data: {
+        link_functionality?: { checked_live: boolean };
+        visual_brand_audit?: { is_official_bank_page: boolean | null };
+      };
+    };
+    assert.equal(persistedDeepJson.data.link_functionality?.checked_live, true);
+    assert.equal(persistedDeepJson.data.visual_brand_audit?.is_official_bank_page, false);
+
+    // Perceptual 64-bit binary image fingerprint comparison unit test
+    const fakeLogoBytesA = new Uint8Array(512);
+    for (let i = 0; i < 512; i++) fakeLogoBytesA[i] = (i * 13) % 256;
+    const sigA = BankVisualComparatorService.compute64BitVisualSignature(fakeLogoBytesA);
+    const sigAClone = BankVisualComparatorService.compute64BitVisualSignature(
+      new Uint8Array(fakeLogoBytesA)
+    );
+    assert.equal(
+      BankVisualComparatorService.computeFingerprintSimilarityPercent(sigA, sigAClone),
+      100
+    );
+
+    console.log('✅ 19. Conexión Funcional del Link (redirecciones/webhooks/SPA) y Comparación de Imágenes Bancarias verificadas.');
 
     console.log('\n🎉 TODAS LAS PRUEBAS DE ARQUITECTURA, SEGURIDAD Y PRODUCTO PASARON EXITOSAMENTE.');
   } finally {

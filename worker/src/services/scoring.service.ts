@@ -19,10 +19,23 @@ export interface ScoringEvaluation {
 }
 
 const SEVERITY_POINTS: Record<string, number> = {
-  CRITICAL: 42,
-  HIGH: 25,
+  CRITICAL: 46,
+  HIGH: 26,
   MEDIUM: 14,
   LOW: 6,
+};
+
+const DECISIVE_CRITICAL_FLOOR: Record<string, number> = {
+  TELEGRAM_OR_WEBHOOK_EXFILTRATION: 94,
+  VISUAL_BANK_IMAGE_IMPERSONATION: 90,
+  SUSPICIOUS_KEYLOGGER_EXFILTRATION: 88,
+  SPA_HIDDEN_CREDENTIAL_HARVESTER: 85,
+  BANK_BRAND_CONTENT_IMPERSONATION: 84,
+  FREE_HOSTING_CREDENTIAL_PHISHING: 82,
+  CTI_IDN_HOMOGLYPH_ATTACK: 85,
+  CTI_LEET_HOMOGLYPH_BRAND_SPOOF: 84,
+  CTI_DNSTWIST_TYPOSQUATTING: 82,
+  CTI_DIRECT_IPV4_PHISHING_HOST: 82,
 };
 
 export class ScoringService {
@@ -73,8 +86,12 @@ export class ScoringService {
       }
     }
 
-    // suspicious TLD heuristic bonus check (.xyz, .top, .click, .zip with banking/package keywords)
-    if (/\.(xyz|top|click|buzz|rest|gq|tk)$/i.test(transport.targetDomain)) {
+    // suspicious TLD heuristic bonus check (.xyz, .top, .click, .online, .site, .icu, .cfd, .sbs, etc.)
+    if (
+      /\.(xyz|top|click|buzz|rest|gq|tk|ml|cf|ga|online|site|icu|cfd|sbs|cyou|vip|fun|pw|su)$/i.test(
+        transport.targetDomain
+      )
+    ) {
       allFindings.push({
         id: CryptoService.generateUlid('fnd'),
         rule_code: 'HIGH_RISK_DISPOSABLE_TLD',
@@ -83,7 +100,7 @@ export class ScoringService {
         line_number: 1,
         column_number: 1,
         dom_selector: 'document:domain',
-        citizen_explanation: `La dirección termina en una extensión económica (${transport.targetDomain.split('.').pop()}) muy usada por estafadores para crear páginas descartables.`,
+        citizen_explanation: `La dirección termina en una extensión económica (.${transport.targetDomain.split('.').pop()}) muy usada por estafadores para crear páginas descartables.`,
         technical_detail: `Dominio registrado bajo TLD con alta incidencia estadística de campañas efímeras de phishing (${transport.targetDomain}).`,
         code_snippet: `Host: ${transport.targetDomain}`,
       });
@@ -91,18 +108,24 @@ export class ScoringService {
 
     allFindings.push(...domFindings, ...jsFindings);
 
-    // Score calculation
+    // Score calculation with decisive floor for confirmed phishing signatures
     let rawScore = 0;
+    let decisiveFloor = 0;
     for (const f of allFindings) {
       rawScore += SEVERITY_POINTS[f.severity] ?? 8;
+      if (DECISIVE_CRITICAL_FLOOR[f.rule_code]) {
+        decisiveFloor = Math.max(decisiveFloor, DECISIVE_CRITICAL_FLOOR[f.rule_code]);
+      } else if (f.rule_code === 'CROSS_DOMAIN_FORM_ACTION' && f.severity === 'CRITICAL') {
+        decisiveFloor = Math.max(decisiveFloor, 80);
+      }
     }
 
     if (transport.redirectCount >= 3) {
       rawScore += 10;
     }
 
-    // Clamp to 0..99 (or 5 for completely clean HTTPS sites so circular gauge looks alive)
-    let riskScore = Math.min(99, rawScore);
+    // Clamp to 0..99 (or 4 for completely clean HTTPS sites so circular gauge looks alive)
+    let riskScore = Math.min(99, Math.max(rawScore, decisiveFloor));
     if (allFindings.length === 0 && transport.isHttps) {
       riskScore = 4;
     }
@@ -136,6 +159,16 @@ export class ScoringService {
     const hasKeylogger = findings.some(
       (f) => f.rule_code === 'SUSPICIOUS_KEYLOGGER_EXFILTRATION'
     );
+    const hasVisualBankImpersonation = findings.some((f) =>
+      ['VISUAL_BANK_IMAGE_IMPERSONATION', 'BANK_BRAND_CONTENT_IMPERSONATION'].includes(f.rule_code)
+    );
+    const hasActiveExfiltration = findings.some((f) =>
+      [
+        'TELEGRAM_OR_WEBHOOK_EXFILTRATION',
+        'SPA_HIDDEN_CREDENTIAL_HARVESTER',
+        'FREE_HOSTING_CREDENTIAL_PHISHING',
+      ].includes(f.rule_code)
+    );
     const hasBrandSpoofCti = findings.some((f) =>
       [
         'CTI_DNSTWIST_TYPOSQUATTING',
@@ -147,6 +180,37 @@ export class ScoringService {
     );
 
     if (riskLevel === 'CRITICAL') {
+      if (hasVisualBankImpersonation) {
+        const bankFinding = findings.find((f) =>
+          ['VISUAL_BANK_IMAGE_IMPERSONATION', 'BANK_BRAND_CONTENT_IMPERSONATION'].includes(
+            f.rule_code
+          )
+        );
+        return {
+          title: 'ALTO: NO ES PÁGINA OFICIAL — Suplantación de Imágenes e Identidad Bancaria',
+          summary:
+            bankFinding?.citizen_explanation ||
+            `Comparamos los logotipos e imágenes de ${transport.targetDomain} y determinamos que copia la imagen de una entidad bancaria desde una dirección falsa.`,
+          action_steps: [
+            '1. NO escribas tu usuario, contraseña, cédula, clave especial ni códigos SMS en esta página.',
+            '2. Aunque veas el logotipo de tu banco y un candado arriba, el dominio NO pertenece a la institución oficial.',
+            '3. Cierra esta ventana y entra únicamente desde la App oficial de tu banco o buscando su portal en nuestro Directorio Verificado.',
+          ],
+        };
+      }
+
+      if (hasActiveExfiltration) {
+        return {
+          title: 'ALTO: Trampa Activa de Phishing Confirmada (Captura Oculta de Claves)',
+          summary:
+            'Al verificar la funcionalidad interna del enlace, detectamos formularios falsos o envío directo de credenciales hacia bots de estafadores (Telegram / Discord / servidores piratas).',
+          action_steps: [
+            '1. Cierra la página de inmediato y bloquea el número o remitente que te envió el enlace.',
+            '2. Si ya escribiste tu clave o código bancario, usa el botón rojo de Emergencia arriba para bloquear tus tarjetas.',
+            '3. Pulsa "Notificar Caso al C.I.C.P.C" para reportar este enlace activo.',
+          ],
+        };
+      }
       if (hasCardTrap) {
         return {
           title: 'ALTO: No escribas tus datos aquí. Esta página intenta robar tu tarjeta',
