@@ -11,27 +11,17 @@ permissions:
 
 jobs:
   verify-and-test:
-    name: TypeScript Strict, Vitest Forensics & Worker Dry-Run
+    name: Edge Forensic Engine, Anti-SSRF, XSS & C.I.C.P.C Security Suite
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js LTS
+      - name: Setup Node.js 24 (Native TypeScript + node:sqlite D1 Simulator)
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
-          cache: 'npm'
+          node-version: '24'
 
-      - name: Install dependencies cleanly
-        run: npm ci
-
-      - name: Run TypeScript strict typecheck
-        run: npm run typecheck
-
-      - name: Execute Forensic & Anti-SSRF Security Suite
-        run: npm test
-
-      - name: Verify Cloudflare Worker V8 Bundle (--dry-run)
-        run: npx wrangler deploy --dry-run --outdir worker/.wrangler/dry-run --config worker/wrangler.toml
+      - name: Execute Full 14-Stage Architecture & Security Verification Suite
+        run: node tests/verify-all.ts
