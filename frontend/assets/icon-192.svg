@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192" role="img" aria-label="Detector360 Icon">
+  <rect width="192" height="192" rx="40" fill="#0F2942"/>
+  <path d="M96 28L40 52v44c0 38.4 23.9 73.8 56 84 32.1-10.2 56-45.6 56-84V52L96 28z" fill="#163B5E" stroke="#0284C7" stroke-width="6"/>
+  <circle cx="92" cy="92" r="26" fill="#0B1120" stroke="#38BDF8" stroke-width="6"/>
+  <line x1="111" y1="111" x2="132" y2="132" stroke="#38BDF8" stroke-width="8" stroke-linecap="round"/>
+  <path d="M81 92l8 8 16-16" fill="none" stroke="#16A34A" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

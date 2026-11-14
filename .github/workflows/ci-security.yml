@@ -1,0 +1,37 @@
+name: Detector360 CI & Security Audit
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  verify-and-test:
+    name: TypeScript Strict, Vitest Forensics & Worker Dry-Run
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js LTS
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies cleanly
+        run: npm ci
+
+      - name: Run TypeScript strict typecheck
+        run: npm run typecheck
+
+      - name: Execute Forensic & Anti-SSRF Security Suite
+        run: npm test
+
+      - name: Verify Cloudflare Worker V8 Bundle (--dry-run)
+        run: npx wrangler deploy --dry-run --outdir worker/.wrangler/dry-run --config worker/wrangler.toml
