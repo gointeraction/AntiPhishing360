@@ -1,4 +1,4 @@
-const CACHE_NAME = 'detector360-edge-v2.9.0';
+const CACHE_NAME = 'detector360-edge-v2.9.1';
 const SHELL_ASSETS = [
   '/',
   '/index.html',
@@ -77,7 +77,23 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Stale-while-revalidate for static assets
+  // Network-first with offline cache fallback for JS & CSS so updates apply immediately
+  if (url.pathname.startsWith('/js/') || url.pathname.startsWith('/css/')) {
+    event.respondWith(
+      fetch(req)
+        .then((res) => {
+          if (res && res.status === 200 && url.origin === self.location.origin) {
+            const clone = res.clone();
+            caches.open(CACHE_NAME).then((c) => c.put(req, clone));
+          }
+          return res;
+        })
+        .catch(async () => (await caches.match(req)) || (await caches.match(url.pathname)))
+    );
+    return;
+  }
+
+  // Stale-while-revalidate for icons and static media
   event.respondWith(
     caches.match(req).then((cached) => {
       const networkFetch = fetch(req)

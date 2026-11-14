@@ -389,11 +389,17 @@ export function createDetector360HttpServer(env: Env) {
 // Start server when invoked directly
 if (process.argv[1] && path.resolve(process.argv[1]) === __filename) {
   const port = parseInt(process.env.PORT || '8788', 10);
+  const host = process.env.HOST;
   const env = createEdgeEnv();
   const server = createDetector360HttpServer(env);
-  server.listen(port, '127.0.0.1', () => {
+  const onListening = () => {
     console.log(`\n🛡️  Detector360 Edge Platform (Cloudflare Pages + Worker + D1 + KV + R2)`);
-    console.log(`⚡ Servidor activo en: http://localhost:${port}`);
+    console.log(`⚡ Servidor activo en: http://localhost:${port} (IPv4 + IPv6 + Red Local)`);
     console.log(`🔬 API Forense REST:  http://localhost:${port}/api/v1/health\n`);
-  });
+  };
+  if (host) {
+    server.listen(port, host, onListening);
+  } else {
+    server.listen(port, onListening);
+  }
 }

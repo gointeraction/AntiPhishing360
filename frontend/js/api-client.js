@@ -13,40 +13,59 @@ export class ApiClient {
       ...(options.headers || {}),
     };
 
-    try {
-      const response = await fetch(url, {
-        ...options,
-        headers,
-        credentials: 'include',
-      });
-
-      let payload = null;
+    let lastError = null;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 16000);
       try {
-        payload = await response.json();
-      } catch {
-        payload = null;
-      }
+        const response = await fetch(url, {
+          ...options,
+          headers,
+          credentials: 'include',
+          cache: 'no-store',
+          signal: options.signal || controller.signal,
+        });
+        clearTimeout(timeoutId);
 
-      if (!response.ok || (payload && payload.success === false)) {
-        const message =
-          payload?.error?.message ||
-          'No pudimos completar la solicitud en este momento. Intenta de nuevo.';
-        const code = payload?.error?.code || `HTTP_${response.status}`;
-        const err = new Error(message);
-        err.code = code;
-        err.status = response.status;
-        throw err;
-      }
+        let payload = null;
+        try {
+          payload = await response.json();
+        } catch {
+          payload = null;
+        }
 
-      return payload;
-    } catch (err) {
-      if (err.code) throw err;
-      const netErr = new Error(
-        'Verifica tu conexión a internet e inténtalo nuevamente en unos segundos.'
-      );
-      netErr.code = 'NETWORK_ERROR';
-      throw netErr;
+        if (!response.ok || (payload && payload.success === false)) {
+          const message =
+            payload?.error?.message ||
+            'No pudimos completar la solicitud en este momento. Intenta de nuevo.';
+          const code = payload?.error?.code || `HTTP_${response.status}`;
+          const err = new Error(message);
+          err.code = code;
+          err.status = response.status;
+          throw err;
+        }
+
+        return payload;
+      } catch (err) {
+        clearTimeout(timeoutId);
+        if (err && err.code) throw err;
+        lastError = err;
+        if (attempt === 0) {
+          await new Promise((resolve) => setTimeout(resolve, 350));
+          continue;
+        }
+      }
     }
+
+    const isBrowserOffline = typeof navigator !== 'undefined' && navigator.onLine === false;
+    const netErr = new Error(
+      isBrowserOffline
+        ? 'Tu dispositivo aparece sin acceso a internet. Conéctate a Wi-Fi o datos móviles e inténtalo de nuevo.'
+        : 'No pudimos conectar con el servidor de análisis. Si abriste un enlace de prueba anterior, usa el enlace actualizado o recarga la página.'
+    );
+    netErr.code = 'NETWORK_ERROR';
+    netErr.cause = lastError;
+    throw netErr;
   }
 
   static getLandingFeed() {

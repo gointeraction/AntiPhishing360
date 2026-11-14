@@ -20,6 +20,7 @@ export function resolveCorsOrigin(request: Request, env: Env): string | null {
   if (
     origin.startsWith('http://localhost:') ||
     origin.startsWith('http://127.0.0.1:') ||
+    origin.startsWith('http://[::1]:') ||
     origin.endsWith('.trycloudflare.com') ||
     origin.endsWith('.pages.dev')
   ) {
@@ -35,7 +36,7 @@ export function handleCorsPreflight(request: Request, env: Env): Response | null
   const allowedOrigin = resolveCorsOrigin(request, env);
   const headers = new Headers({
     ...SECURITY_HEADERS,
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Methods': 'GET, POST, PATCH, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With',
     'Access-Control-Max-Age': '86400',
   });
