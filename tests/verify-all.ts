@@ -275,6 +275,7 @@ async function runVerification() {
       '/assets/images/alerta-fraude-bloqueado.jpg',
       '/assets/images/ciudadano-banca-segura.jpg',
       '/assets/images/comunidad-charla-digital.jpg',
+      '/assets/images/banner-red-familiar-angel-guardian.jpg',
     ];
     for (const imgRoute of editorialImages) {
       const imgRes = await dispatch(imgRoute);
@@ -520,6 +521,7 @@ async function runVerification() {
       'btn-senior-mode-toggle',
       'senior-giant-paste-bar',
       'senior-semaphore-banner',
+      'banner-widescreen-angel-guardian',
       'escudo-adulto-mayor',
       'anti-panic-modal',
       'senior-emergency-modal',

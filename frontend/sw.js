@@ -1,4 +1,4 @@
-const CACHE_NAME = 'detector360-edge-v2.6.0';
+const CACHE_NAME = 'detector360-edge-v2.7.0';
 const SHELL_ASSETS = [
   '/',
   '/index.html',

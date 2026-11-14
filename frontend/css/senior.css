@@ -504,3 +504,58 @@ html.senior-mode .senior-giant-paste-bar {
   color: #FFFFFF;
   font-size: 0.96rem;
 }
+
+/* --------------------------------------------------------------------------
+   SECCIÓN INTERMEDIA BANNER WIDESCREEN (100% DESPEJADO SIN TAPAR ROSTROS)
+   -------------------------------------------------------------------------- */
+.midpage-widescreen-banner-section {
+  position: relative;
+  width: 100%;
+  background: #020A1E;
+  border-top: 2px solid rgba(0, 225, 255, 0.48);
+  border-bottom: 2px solid rgba(0, 225, 255, 0.48);
+  box-shadow: 0 22px 60px rgba(0, 10, 32, 0.65), 0 0 38px rgba(0, 225, 255, 0.14);
+  overflow: hidden;
+}
+
+.midpage-widescreen-figure {
+  margin: 0;
+  width: 100%;
+  background: #020A1E;
+}
+
+.midpage-widescreen-img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.midpage-widescreen-dock {
+  background: linear-gradient(90deg, rgba(3, 21, 62, 0.98) 0%, rgba(10, 61, 145, 0.92) 55%, rgba(3, 21, 62, 0.98) 100%);
+  border-top: 1px solid rgba(0, 225, 255, 0.35);
+  padding: 18px 0;
+}
+
+.midpage-widescreen-dock-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.midpage-dock-summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #FFFFFF;
+  font-size: 0.96rem;
+}
+
+.midpage-dock-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+

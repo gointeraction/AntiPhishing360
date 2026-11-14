@@ -7,6 +7,8 @@
 ![Seguridad](https://img.shields.io/badge/DOM_XSS-Zero_innerHTML-00E1FF?style=for-the-badge)
 ![Suite de Pruebas](https://img.shields.io/badge/Tests-16%2F16_Passing-10B981?style=for-the-badge)
 
+![Banner Red de Apoyo Familiar Ángel Guardián — Detector360](frontend/assets/images/banner-red-familiar-angel-guardian.jpg)
+
 **Detector360** es una solución integral de defensa digital ciudadana e inteligencia estratégica contra delitos informáticos. Permite a cualquier persona —incluyendo adultos mayores con asistencia visual, auditiva y apoyo familiar— inspeccionar enlaces sospechosos, mensajes completos de WhatsApp/SMS, capturas de pantalla y códigos QR en **menos de 2.5 segundos** sin abrir la página peligrosa en su dispositivo, articulando además la recepción de denuncias y generación de reglas perimetrales **Suricata IDS/IPS** para la **División de Investigaciones de Delitos Informáticos (C.I.C.P.C)**.
 
 ---
