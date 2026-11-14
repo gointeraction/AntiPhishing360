@@ -29,9 +29,10 @@ export class ScoringService {
   static evaluate(
     transport: TransportAuditResult,
     domFindings: ScanFindingDTO[],
-    jsFindings: ScanFindingDTO[]
+    jsFindings: ScanFindingDTO[],
+    urlCtiFindings: ScanFindingDTO[] = []
   ): ScoringEvaluation {
-    const allFindings: ScanFindingDTO[] = [];
+    const allFindings: ScanFindingDTO[] = [...urlCtiFindings];
 
     // Transport-level findings
     if (!transport.isHttps) {
@@ -135,6 +136,15 @@ export class ScoringService {
     const hasKeylogger = findings.some(
       (f) => f.rule_code === 'SUSPICIOUS_KEYLOGGER_EXFILTRATION'
     );
+    const hasBrandSpoofCti = findings.some((f) =>
+      [
+        'CTI_DNSTWIST_TYPOSQUATTING',
+        'CTI_LEET_HOMOGLYPH_BRAND_SPOOF',
+        'CTI_BRAND_COMBOSQUATTING_IMPERSONATION',
+        'CTI_IDN_HOMOGLYPH_ATTACK',
+        'CTI_DIRECT_IPV4_PHISHING_HOST',
+      ].includes(f.rule_code)
+    );
 
     if (riskLevel === 'CRITICAL') {
       if (hasCardTrap) {
@@ -163,6 +173,19 @@ export class ScoringService {
         };
       }
 
+      if (hasBrandSpoofCti) {
+        return {
+          title: 'ALTO: Dirección web impostora detectada (Suplantación de Marca / Typosquatting)',
+          summary:
+            'Nuestro motor predictivo de URLs descubrió que este enlace imita maliciosamente el nombre de una entidad real cambiando letras, usando números parecidos o dominios falsos.',
+          action_steps: [
+            '1. No abras este enlace ni ingreses usuario, clave o códigos dinámicos.',
+            '2. Entra siempre desde la aplicación oficial o escribiendo tú mismo la dirección legítima.',
+            '3. Usa el botón "Notificar Caso al C.I.C.P.C" para bloquear esta infraestructura fraudulenta.',
+          ],
+        };
+      }
+
       return {
         title: 'ALTO: No escribas tus datos aquí. Esta página no protege tu información',
         summary:
@@ -176,6 +199,18 @@ export class ScoringService {
     }
 
     if (riskLevel === 'WARNING') {
+      if (hasBrandSpoofCti) {
+        return {
+          title: 'ALERTA TEMPRANA: Esta dirección web imita el nombre de una institución real',
+          summary: `Aunque ${transport.targetDomain} usa cifrado HTTPS, su dirección presenta señales de suplantación o typosquatting respecto a la página oficial.`,
+          action_steps: [
+            '1. No ingreses contraseñas ni datos bancarios hasta verificar letra por letra la dirección.',
+            '2. Compara este enlace con el portal oficial de tu banco o servicio.',
+            '3. Ante cualquier duda, repórtalo al C.I.C.P.C desde este reporte.',
+          ],
+        };
+      }
+
       return {
         title: 'PRECAUCIÓN: Faltan medidas de seguridad importantes en este sitio',
         summary: `Revisamos ${transport.targetDomain}: no encontramos robo directo de claves, pero le faltan protecciones modernas recomendadas.`,

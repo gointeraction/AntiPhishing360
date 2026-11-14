@@ -56,6 +56,7 @@ export class ApiRouter {
     this.add('GET', '/api/v1/cicpc/cases', CicpcController.listCases);
     this.add('GET', '/api/v1/cicpc/cases/:case_id', CicpcController.getCaseDetail);
     this.add('PATCH', '/api/v1/cicpc/cases/:case_id', CicpcController.updateCaseDecision);
+    this.add('GET', '/api/v1/cicpc/rules/suricata', CicpcController.exportSuricataRules);
   }
 
   private add(method: string, pathTemplate: string, handler: RouteHandler): void {

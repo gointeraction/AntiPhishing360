@@ -6,6 +6,7 @@ import type {
   RequestContext,
 } from '../types.ts';
 import { CryptoService } from '../services/crypto.service.ts';
+import { AntiphishingCtiService } from '../services/url-heuristics.service.ts';
 import { CicpcRepository } from '../repositories/cicpc.repository.ts';
 import { ScanRepository } from '../repositories/scan.repository.ts';
 import { jsonResponse } from '../middlewares/security.middleware.ts';
@@ -555,6 +556,54 @@ export class CicpcController {
       success: true,
       message: 'Dictamen experto y acción estratégica registrados en cadena de custodia.',
       data: refreshed,
+    });
+  }
+
+  // --------------------------------------------------------------------------
+  // 4. EXPORTACIÓN DE REGLAS SURICATA IDS/IPS (DNS / TLS SNI / HTTP / IPv4)
+  // --------------------------------------------------------------------------
+  static async exportSuricataRules(rc: RequestContext): Promise<Response> {
+    const officer = await resolveCicpcOfficer(rc.request, rc.env);
+    if (!officer) {
+      return jsonResponse(
+        {
+          success: false,
+          error: {
+            code: 'CICPC_UNAUTHORIZED',
+            message: 'Acceso restringido a funcionarios autorizados del C.I.C.P.C.',
+          },
+        },
+        401
+      );
+    }
+
+    const cicpcRepo = new CicpcRepository(rc.env.DB);
+    const cases = await cicpcRepo.listCases({
+      status: 'all',
+      priority: 'all',
+      channel: 'all',
+      search: '',
+      limit: 200,
+    });
+
+    const activeThreatCases = cases.filter((c) => c.status !== 'archived');
+    const rulesText = AntiphishingCtiService.generateSuricataRules(activeThreatCases);
+
+    await cicpcRepo.appendAuditLog({
+      officerBadge: officer.badge_id,
+      officerName: officer.full_name,
+      actionCode: 'SURICATA_RULES_EXPORTED',
+      detail: `Generó y exportó lote de reglas Suricata IDS/IPS (DNS, TLS SNI, HTTP) para ${activeThreatCases.length} expedientes activos.`,
+      clientIp: rc.clientIp,
+    });
+
+    return jsonResponse({
+      success: true,
+      data: {
+        filename: `antiphishing_d360_cicpc_${new Date().toISOString().slice(0, 10)}.rules`,
+        total_cases_included: activeThreatCases.length,
+        rules_text: rulesText,
+      },
     });
   }
 }

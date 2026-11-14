@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createEdgeEnv, handleEdgeRequest } from '../dev-server.ts';
+import { AntiphishingCtiService } from '../worker/src/services/url-heuristics.service.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -410,6 +411,100 @@ async function runVerification() {
     assert.equal(patchBody.data.case_record.strategic_action_type, 'ISP_DNS_BLOCK_REQUEST');
     assert.equal(patchBody.data.case_record.reviewed_by_badge, 'CICPC-DIDI-2429');
     console.log('✅ 14. Módulo Restringido C.I.C.P.C (/cicpc, 3 factores criptográficos, recepción de denuncias y acciones estratégicas) verificado.');
+
+    // 15. Verificar Motor Predictivo Day-Zero de URLs (Técnica julioliraup/Antiphishing + Reglas Suricata IDS/IPS)
+    const typoAnalysis = await AntiphishingCtiService.analyzeUrl('https://paypaal.com/signin');
+    assert.ok(
+      typoAnalysis.some((f) => f.rule_code === 'CTI_DNSTWIST_TYPOSQUATTING'),
+      'Debe detectar typosquatting Damerau-Levenshtein (paypaal -> paypal)'
+    );
+
+    const idnAnalysis = await AntiphishingCtiService.analyzeUrl('https://xn--pple-43d.com/auth');
+    assert.ok(
+      idnAnalysis.some((f) => f.rule_code === 'CTI_IDN_HOMOGLYPH_ATTACK'),
+      'Debe detectar ataque IDN Punycode (xn--)'
+    );
+
+    const ipv4Analysis = await AntiphishingCtiService.analyzeUrl('http://45.142.212.100/login');
+    assert.ok(
+      ipv4Analysis.some((f) => f.rule_code === 'CTI_DIRECT_IPV4_PHISHING_HOST'),
+      'Debe detectar host IPv4 literal directo sin dominio'
+    );
+
+    const userinfoAnalysis = await AntiphishingCtiService.analyzeUrl(
+      'https://google.com@acceso-urgente.xyz/login'
+    );
+    assert.ok(
+      userinfoAnalysis.some((f) => f.rule_code === 'CTI_URL_USERINFO_MASQUERADE'),
+      'Debe detectar camuflaje de autoridad con @ userinfo'
+    );
+
+    for (const safeOfficial of [
+      'https://www.paypal.com/myaccount',
+      'https://www.banesco.com/',
+      'https://portal-verificado.detector360.ejemplo/acceso',
+    ]) {
+      const safeCheck = await AntiphishingCtiService.analyzeUrl(safeOfficial);
+      assert.equal(
+        safeCheck.length,
+        0,
+        `Dominio oficial legítimo (${safeOfficial}) debe tener 0 falsos positivos CTI`
+      );
+    }
+
+    // Escaneo en vivo de un dominio Day-Zero homógrafo caído / evasivo debe emitir veredicto CRITICAL predictivo
+    const dayZeroRes = await dispatch('/api/v1/scans', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Cookie: cookieHeader,
+      },
+      body: JSON.stringify({
+        url: 'https://paypa1-verificacion-segura.xyz/login',
+        device_profile: 'android',
+      }),
+    });
+    assert.equal(dayZeroRes.status, 201, 'Escaneo Day-Zero predictivo debe responder 201');
+    const dayZeroBody = (await dayZeroRes.json()) as {
+      success: boolean;
+      data: {
+        risk_level: string;
+        risk_score: number;
+        findings: Array<{ rule_code: string }>;
+      };
+    };
+    assert.equal(dayZeroBody.success, true);
+    assert.equal(dayZeroBody.data.risk_level, 'CRITICAL');
+    assert.ok(dayZeroBody.data.risk_score >= 65);
+    assert.ok(
+      dayZeroBody.data.findings.some(
+        (f) =>
+          f.rule_code === 'CTI_LEET_HOMOGLYPH_BRAND_SPOOF' ||
+          f.rule_code === 'CTI_BRAND_COMBOSQUATTING_IMPERSONATION'
+      )
+    );
+
+    // Exportación protegida de firmas Suricata IDS/IPS (DNS, TLS SNI, HTTP) en el módulo C.I.C.P.C
+    const unauthSuricata = await dispatch('/api/v1/cicpc/rules/suricata', {
+      headers: { Cookie: cookieHeader },
+    });
+    assert.equal(unauthSuricata.status, 401);
+
+    const suricataRes = await dispatch('/api/v1/cicpc/rules/suricata', {
+      headers: { Cookie: cicpcCookiePair },
+    });
+    assert.equal(suricataRes.status, 200);
+    const suricataBody = (await suricataRes.json()) as {
+      success: boolean;
+      data: { filename: string; total_cases_included: number; rules_text: string };
+    };
+    assert.equal(suricataBody.success, true);
+    assert.ok(suricataBody.data.total_cases_included >= 4);
+    assert.ok(suricataBody.data.rules_text.includes('alert dns $HOME_NET any -> any any'));
+    assert.ok(suricataBody.data.rules_text.includes('alert tls $HOME_NET any -> any any'));
+    assert.ok(suricataBody.data.rules_text.includes('alert http $HOME_NET any -> any any'));
+    assert.ok(suricataBody.data.rules_text.includes('sid:6090001;'));
+    console.log('✅ 15. Motor Heurístico Predictivo Day-Zero (julioliraup/Antiphishing: Homógrafos, Typosquatting, NRD y Reglas Suricata IDS/IPS) verificado.');
 
     console.log('\n🎉 TODAS LAS PRUEBAS DE ARQUITECTURA, SEGURIDAD Y PRODUCTO PASARON EXITOSAMENTE.');
   } finally {

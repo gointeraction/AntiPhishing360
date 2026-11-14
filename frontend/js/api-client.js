@@ -159,6 +159,10 @@ export class ApiClient {
       body: JSON.stringify(data),
     });
   }
+
+  static cicpcExportSuricataRules() {
+    return this.request('/cicpc/rules/suricata', { method: 'GET' });
+  }
 }
 
 export function showToast(message, isError = false) {

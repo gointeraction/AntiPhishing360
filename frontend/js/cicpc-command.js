@@ -80,6 +80,7 @@ function populateOfficerHeader(officer) {
 
 function bindToolbarAndFilters() {
   const refreshBtn = document.getElementById('btn-refresh-command');
+  const suricataBtn = document.getElementById('btn-export-suricata');
   const csvBtn = document.getElementById('btn-export-csv');
   const logoutBtn = document.getElementById('btn-cicpc-logout');
   const searchInput = document.getElementById('filter-search-input');
@@ -100,6 +101,10 @@ function bindToolbarAndFilters() {
       await ApiClient.cicpcLogout();
       window.location.replace('/cicpc/login');
     });
+  }
+
+  if (suricataBtn) {
+    suricataBtn.addEventListener('click', () => exportSuricataIdsRules(suricataBtn));
   }
 
   if (csvBtn) {
@@ -585,6 +590,37 @@ function exportFilteredCasesCsv() {
   a.click();
   a.remove();
   URL.revokeObjectURL(url);
+}
+
+async function exportSuricataIdsRules(btn) {
+  if (btn) btn.disabled = true;
+  try {
+    const res = await ApiClient.cicpcExportSuricataRules();
+    const rulesText = res?.data?.rules_text || '';
+    const filename = res?.data?.filename || 'antiphishing_d360_cicpc.rules';
+
+    if (!rulesText) {
+      showToast('No hay indicadores activos para generar reglas Suricata.', true);
+      return;
+    }
+
+    const blob = new Blob([rulesText], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+
+    showToast(`Firmas Suricata IDS/IPS exportadas (${res.data.total_cases_included} casos).`);
+    await refreshAllTelemetry();
+  } catch (err) {
+    showToast(err.message || 'No se pudieron generar las reglas Suricata.', true);
+  } finally {
+    if (btn) btn.disabled = false;
+  }
 }
 
 function setText(id, text) {

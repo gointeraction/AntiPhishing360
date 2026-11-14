@@ -4,6 +4,7 @@ import { SsrfGuardService, SsrfViolationError } from '../services/ssrf-guard.ser
 import { TransportFetchError, TransportService } from '../services/transport.service.ts';
 import { DomParserService } from '../services/dom-parser.service.ts';
 import { JsAnalyzerService } from '../services/js-analyzer.service.ts';
+import { AntiphishingCtiService } from '../services/url-heuristics.service.ts';
 import { ScoringService } from '../services/scoring.service.ts';
 import { ScanRepository } from '../repositories/scan.repository.ts';
 import { CicpcRepository } from '../repositories/cicpc.repository.ts';
@@ -94,10 +95,10 @@ export class ScanController {
       }
     }
 
-    // Live Forensic Audit (Transport + DOM + JS + Scoring)
-    let transport;
+    // Step A: Strict Anti-SSRF Validation + Day-Zero Predictive URL Heuristics (julioliraup/Antiphishing technique)
+    let validatedInitialUrl: URL;
     try {
-      transport = await TransportService.fetchAndAudit(normalizedUrl, deviceProfile);
+      validatedInitialUrl = SsrfGuardService.validatePublicUrl(normalizedUrl);
     } catch (err) {
       if (err instanceof SsrfViolationError) {
         return jsonResponse(
@@ -111,7 +112,74 @@ export class ScanController {
           400
         );
       }
-      if (err instanceof TransportFetchError) {
+      return jsonResponse(
+        {
+          success: false,
+          error: { code: 'INVALID_URL', message: 'Dirección web inválida.' },
+        },
+        400
+      );
+    }
+
+    let urlCtiFindings = await AntiphishingCtiService.analyzeUrl(
+      validatedInitialUrl.toString(),
+      rc.env.KV_CACHE
+    );
+
+    // Step B: Live Forensic Audit (Transport + DOM + JS + Scoring) with Day-Zero Predictive Fallback
+    let transport;
+    try {
+      transport = await TransportService.fetchAndAudit(normalizedUrl, deviceProfile);
+      if (transport.finalUrl && transport.finalUrl !== validatedInitialUrl.toString()) {
+        const finalUrlFindings = await AntiphishingCtiService.analyzeUrl(
+          transport.finalUrl,
+          rc.env.KV_CACHE
+        );
+        const seenRules = new Set(urlCtiFindings.map((f) => f.rule_code));
+        for (const ff of finalUrlFindings) {
+          if (!seenRules.has(ff.rule_code)) {
+            urlCtiFindings.push(ff);
+            seenRules.add(ff.rule_code);
+          }
+        }
+      }
+    } catch (err) {
+      if (err instanceof SsrfViolationError) {
+        return jsonResponse(
+          {
+            success: false,
+            error: {
+              code: 'INVALID_OR_RESTRICTED_URL',
+              message: err.message,
+            },
+          },
+          400
+        );
+      }
+      // Day-Zero Predictive Defense: If the host is newly registered / offline / cloaking bots,
+      // yet URL heuristics detected typosquatting, homoglyphs or brand impersonation, protect the citizen!
+      if (err instanceof TransportFetchError && urlCtiFindings.length > 0) {
+        const isHttps = validatedInitialUrl.protocol === 'https:';
+        transport = {
+          finalUrl: validatedInitialUrl.toString(),
+          targetDomain: validatedInitialUrl.hostname.toLowerCase(),
+          protocol: isHttps ? ('https' as const) : ('http' as const),
+          isHttps,
+          httpStatusCode: 0,
+          redirectCount: 0,
+          securityHeaders: {
+            strict_transport_security: false,
+            content_security_policy: false,
+            x_frame_options: false,
+          },
+          htmlContent: [
+            `<!-- Detector360 x Antiphishing CTI (Evaluación Predictiva Day-Zero) -->`,
+            `<!-- URL inspeccionada: ${validatedInitialUrl.toString()} -->`,
+            `<!-- El servidor remoto aún no sirve HTML público o aplica evasión/cloaking, pero la estructura del dominio fue interceptada preventivamente. -->`,
+          ].join('\n'),
+          simulatedDemo: true,
+        };
+      } else if (err instanceof TransportFetchError) {
         return jsonResponse(
           {
             success: false,
@@ -122,17 +190,18 @@ export class ScanController {
           },
           err.statusCode
         );
-      }
-      return jsonResponse(
-        {
-          success: false,
-          error: {
-            code: 'SCAN_FAILED',
-            message: 'No fue posible completar la inspección del enlace en este momento.',
+      } else {
+        return jsonResponse(
+          {
+            success: false,
+            error: {
+              code: 'SCAN_FAILED',
+              message: 'No fue posible completar la inspección del enlace en este momento.',
+            },
           },
-        },
-        502
-      );
+          502
+        );
+      }
     }
 
     const domFindings = DomParserService.analyzeHtml(
@@ -141,7 +210,12 @@ export class ScanController {
       transport.isHttps
     );
     const jsFindings = JsAnalyzerService.analyzeScripts(transport.htmlContent, transport.isHttps);
-    const evaluation = ScoringService.evaluate(transport, domFindings, jsFindings);
+    const evaluation = ScoringService.evaluate(
+      transport,
+      domFindings,
+      jsFindings,
+      urlCtiFindings
+    );
 
     const scanId = CryptoService.generateUlid('scn');
     const scannedAt = new Date().toISOString().replace(/\.\d{3}Z$/, 'Z');
