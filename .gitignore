@@ -1,0 +1,20 @@
+# Dependencies
+node_modules/
+
+# Cloudflare Wrangler local state & secrets
+.wrangler/
+.dev.vars
+worker/.wrangler/
+worker/.dev.vars
+
+# Build outputs & logs
+dist/
+coverage/
+*.log
+npm-debug.log*
+
+# OS & IDE metadata
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

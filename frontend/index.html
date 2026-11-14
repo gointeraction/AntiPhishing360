@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0F2942">
+  <meta name="description" content="Detector360 — Escáner Forense Web Ciudadano Anti-Phishing y Auditoría de Transporte sobre Cloudflare Edge.">
+  <title>Detector360 — Escáner Forense Web Ciudadano</title>
+
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" type="image/svg+xml" href="/assets/icon-192.svg">
+  <link rel="apple-touch-icon" href="/assets/icon-192.svg">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/css/tokens.css">
+  <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Saltar al contenido principal</a>
+
+  <!-- Offline Status Banner -->
+  <div id="offline-banner" class="offline-banner" role="status" aria-live="polite" hidden>
+    Sin conexión a internet — Mostrando historial guardado localmente en tu dispositivo. Los enlaces compartidos se analizarán al recuperar red.
+  </div>
+
+  <!-- Header (64px) -->
+  <header class="app-header">
+    <div class="header-inner">
+      <a href="/" class="brand-link" data-nav="/">
+        <img src="/assets/icon-192.svg" alt="" width="34" height="34">
+        <span>Detector360</span>
+        <span class="brand-badge hide-mobile">Forense Edge</span>
+      </a>
+
+      <nav class="header-nav" aria-label="Navegación principal">
+        <button type="button" class="nav-link hide-mobile" data-nav="/#alertas-recientes">Alertas Recientes</button>
+        <button type="button" class="nav-link" data-nav="/how-it-works">Cómo Funciona</button>
+        <button type="button" id="nav-advanced-btn" class="nav-link hide-mobile" data-nav="/scan/new">Auditoría Avanzada</button>
+
+        <!-- Guest Actions -->
+        <button type="button" id="nav-auth-btn" class="btn btn-secondary btn-sm" data-nav="/login">
+          Iniciar Sesión / Registro
+        </button>
+
+        <!-- Authenticated Citizen Actions -->
+        <button type="button" id="nav-dashboard-btn" class="btn btn-primary btn-sm" data-nav="/dashboard" hidden>
+          Mi Bóveda
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main SPA Viewport -->
+  <main id="main-content" class="main-content">
+
+    <!-- =================================================================== -->
+    <!-- VIEW 1: LANDING PAGE / ESCÁNER PRINCIPAL (/)                         -->
+    <!-- =================================================================== -->
+    <section id="view-home" class="view-section" aria-labelledby="hero-title">
+      <div class="hero-scanner-wrap card card-elevated">
+        <div class="hero-header">
+          <h1 id="hero-title">Verifica cualquier enlace antes de ingresar tus datos</h1>
+          <p class="text-muted">
+            Detecta sitios de phishing y formularios sin cifrado analizando su transporte HTTPS/TLS y su código fuente línea por línea en segundos.
+          </p>
+        </div>
+
+        <div id="home-scan-error" class="feedback-alert feedback-error" role="alert" hidden></div>
+
+        <form id="home-scan-form" novalidate>
+          <label for="home-url-input" class="form-label">Dirección URL sospechosa</label>
+          <div class="scanner-bar">
+            <div class="url-input-group">
+              <input
+                type="url"
+                id="home-url-input"
+                class="url-input"
+                placeholder="https://ejemplo-sospechoso.com/login"
+                autocomplete="off"
+                autocapitalize="none"
+                spellcheck="false"
+                required
+              >
+              <button
+                type="button"
+                id="home-paste-btn"
+                class="paste-btn"
+                title="Pegar enlace desde portapapeles"
+                aria-label="Pegar enlace desde portapapeles"
+              >
+                📋
+              </button>
+            </div>
+
+            <button type="submit" id="home-scan-submit" class="btn btn-primary">
+              Analizar URL
+            </button>
+          </div>
+        </form>
+
+        <!-- Stepper Progress -->
+        <div id="home-scan-stepper" class="scan-stepper" aria-live="polite" hidden>
+          <div class="stepper-steps">
+            <div id="step-connect" class="step-item active">
+              <span class="step-dot"></span>
+              <span>1. Conectando (Anti-SSRF)</span>
+            </div>
+            <div id="step-transport" class="step-item">
+              <span class="step-dot"></span>
+              <span>2. Auditando Transporte TLS</span>
+            </div>
+            <div id="step-domjs" class="step-item">
+              <span class="step-dot"></span>
+              <span>3. Analizando DOM y Scripts JS</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="pills-row" aria-label="Capas de inspección">
+          <span class="info-pill">1. Auditoría HTTPS/SSL</span>
+          <span class="info-pill">2. Inspección de Formularios</span>
+          <span class="info-pill">3. Rastreo de Scripts JS</span>
+        </div>
+
+        <!-- Instant Forensic Demo Corpus -->
+        <div class="demo-samples-bar">
+          <span class="text-muted">Probar visor forense al instante:</span>
+          <button type="button" class="chip-btn" id="demo-phishing-btn">
+            🚨 Caso Phishing Crítico (Línea exacta)
+          </button>
+          <button type="button" class="chip-btn" id="demo-safe-btn">
+            ✅ Caso Portal Cifrado Seguro
+          </button>
+        </div>
+      </div>
+
+      <!-- Recent Community Alerts -->
+      <section id="alertas-recientes" aria-labelledby="alerts-heading">
+        <div class="section-header-row">
+          <div>
+            <h2 id="alerts-heading">Alertas Comunitarias Recientes</h2>
+            <p class="text-muted" style="margin-bottom:0;">
+              Dominios verificados con Peligro Crítico reportados por ciudadanos (parcialmente ofuscados por seguridad).
+            </p>
+          </div>
+          <button type="button" id="refresh-alerts-btn" class="btn btn-secondary btn-sm">
+            Actualizar Feed
+          </button>
+        </div>
+
+        <div id="community-alerts-grid" class="alerts-grid"></div>
+      </section>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- VIEW 2: LOGIN (/login)                                               -->
+    <!-- =================================================================== -->
+    <section id="view-login" class="view-section" hidden aria-labelledby="login-title">
+      <div class="auth-card-wrap card card-elevated">
+        <h2 id="login-title">Accede a tu bóveda de análisis</h2>
+        <p class="text-muted">Consulta tu historial sincronizado en la nube y publica alertas comunitarias.</p>
+
+        <div id="login-feedback" class="feedback-alert feedback-error" role="alert" hidden></div>
+
+        <form id="login-form" novalidate>
+          <div class="form-field">
+            <label for="login-email" class="form-label">Correo electrónico</label>
+            <input type="email" id="login-email" class="form-input" autocomplete="email" required placeholder="ciudadano@ejemplo.com">
+          </div>
+
+          <div class="form-field">
+            <label for="login-password" class="form-label">Contraseña</label>
+            <div class="password-input-wrap">
+              <input type="password" id="login-password" class="form-input" autocomplete="current-password" required placeholder="••••••••••">
+              <button type="button" id="login-toggle-pwd" class="password-toggle-btn" aria-label="Mostrar u ocultar contraseña">Ver</button>
+            </div>
+          </div>
+
+          <label class="checkbox-row">
+            <input type="checkbox" id="login-remember" checked>
+            <span>Mantener sesión iniciada (7 días)</span>
+          </label>
+
+          <button type="submit" id="login-submit-btn" class="btn btn-primary btn-block">Entrar</button>
+        </form>
+
+        <div style="margin-top: 16px; text-align: center; display: flex; flex-direction: column; gap: 8px;">
+          <button type="button" class="nav-link" data-nav="/register" style="justify-content:center;">
+            ¿No tienes cuenta? Regístrate gratis
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm" data-nav="/">
+            Continuar sin cuenta al escáner
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- VIEW 3: REGISTRO CIUDADANO (/register)                               -->
+    <!-- =================================================================== -->
+    <section id="view-register" class="view-section" hidden aria-labelledby="register-title">
+      <div class="auth-card-wrap card card-elevated">
+        <h2 id="register-title">Crea tu cuenta ciudadana</h2>
+        <p class="text-muted">Tu identidad nunca se expone públicamente al compartir alertas comunitarias.</p>
+
+        <div id="register-feedback" class="feedback-alert feedback-error" role="alert" hidden></div>
+
+        <form id="register-form" novalidate>
+          <div class="form-field">
+            <label for="reg-alias" class="form-label">Alias o Nombre público</label>
+            <input type="text" id="reg-alias" class="form-input" minlength="2" maxlength="50" required placeholder="Ej: CarlosMendez">
+          </div>
+
+          <div class="form-field">
+            <label for="reg-email" class="form-label">Correo electrónico</label>
+            <input type="email" id="reg-email" class="form-input" autocomplete="email" required placeholder="carlos@ejemplo.com">
+          </div>
+
+          <div class="form-field">
+            <label for="reg-password" class="form-label">Contraseña segura</label>
+            <div class="password-input-wrap">
+              <input type="password" id="reg-password" class="form-input" autocomplete="new-password" required placeholder="Mín. 10 caracteres, Mayús, Núm y Símbolo">
+              <button type="button" id="reg-toggle-pwd" class="password-toggle-btn" aria-label="Mostrar u ocultar contraseña">Ver</button>
+            </div>
+            <div class="strength-meter" aria-hidden="true">
+              <div id="reg-strength-bar" class="strength-meter-bar"></div>
+            </div>
+            <small id="reg-strength-text" class="text-muted">Mínimo 10 caracteres, mayúscula, minúscula, número y símbolo.</small>
+          </div>
+
+          <div class="form-field">
+            <label for="reg-password-confirm" class="form-label">Confirmar contraseña</label>
+            <input type="password" id="reg-password-confirm" class="form-input" autocomplete="new-password" required placeholder="Repite tu contraseña">
+          </div>
+
+          <label class="checkbox-row">
+            <input type="checkbox" id="reg-ethics-check" required>
+            <span>Acepto las condiciones de uso ético y defensivo de auditoría ciudadana.</span>
+          </label>
+
+          <button type="submit" id="reg-submit-btn" class="btn btn-primary btn-block">Crear cuenta</button>
+        </form>
+
+        <div style="margin-top: 16px; text-align: center;">
+          <button type="button" class="nav-link" data-nav="/login" style="justify-content:center; width:100%;">
+            ¿Ya tienes cuenta? Inicia sesión aquí
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- VIEW 4: DASHBOARD CIUDADANO (/dashboard)                             -->
+    <!-- =================================================================== -->
+    <section id="view-dashboard" class="view-section" hidden aria-labelledby="dash-heading">
+      <div class="dashboard-shell">
+        <aside class="card dashboard-sidebar" aria-label="Menú de bóveda ciudadana">
+          <button type="button" class="sidebar-btn active" data-dash-tab="history">📂 Mi Historial</button>
+          <button type="button" class="sidebar-btn" data-nav="/scan/new">🔬 Escaneo Avanzado</button>
+          <button type="button" class="sidebar-btn" data-nav="/#alertas-recientes">🚨 Alertas Comunitarias</button>
+          <button type="button" class="sidebar-btn" data-dash-tab="profile">👤 Mi Perfil</button>
+          <button type="button" id="dash-logout-btn" class="sidebar-btn" style="color: var(--crit-main);">🚪 Cerrar Sesión</button>
+        </aside>
+
+        <div>
+          <!-- Quick Scan Bar -->
+          <div class="card" style="margin-bottom: var(--space-lg);">
+            <h2 id="dash-heading" style="margin-bottom: 12px;">Escaneo Rápido Vinculado</h2>
+            <form id="dash-quick-scan-form" class="scanner-bar" novalidate>
+              <input
+                type="url"
+                id="dash-quick-url"
+                class="url-input"
+                placeholder="https://sitio-a-verificar.com"
+                required
+              >
+              <button type="submit" id="dash-quick-submit" class="btn btn-primary">Analizar Ahora</button>
+            </form>
+          </div>
+
+          <!-- 3 Personal KPI Cards -->
+          <div class="kpi-grid">
+            <div class="card">
+              <div class="text-muted">Total URLs Analizadas</div>
+              <div id="kpi-total-scans" class="kpi-value">0</div>
+            </div>
+            <div class="card">
+              <div class="text-muted">Amenazas Bloqueadas a Tiempo</div>
+              <div id="kpi-threats-blocked" class="kpi-value" style="color: var(--crit-main);">0</div>
+            </div>
+            <div class="card">
+              <div class="text-muted">Reportes Forenses Exportados</div>
+              <div id="kpi-exports-count" class="kpi-value" style="color: var(--color-accent);">0</div>
+            </div>
+          </div>
+
+          <!-- Tab: Audit History -->
+          <div id="dash-panel-history" class="card">
+            <div class="section-header-row">
+              <h3>Historial de Auditorías</h3>
+              <button type="button" id="dash-refresh-history" class="btn btn-secondary btn-sm">Sincronizar</button>
+            </div>
+
+            <div class="history-filters">
+              <input
+                type="search"
+                id="history-search-input"
+                class="form-input"
+                style="flex: 1; min-width: 200px;"
+                placeholder="Filtrar por dominio o palabra clave..."
+              >
+              <select id="history-risk-filter" class="form-select" style="width: auto; min-width: 180px;">
+                <option value="">Todos los niveles</option>
+                <option value="CRITICAL">Peligro Crítico</option>
+                <option value="WARNING">Precaución</option>
+                <option value="SAFE">Sitio Seguro</option>
+              </select>
+            </div>
+
+            <div id="history-list-container" class="history-list"></div>
+          </div>
+
+          <!-- Tab: Profile -->
+          <div id="dash-panel-profile" class="card" hidden>
+            <h3>Perfil Ciudadano</h3>
+            <p class="text-muted">Sesión protegida con cookies HttpOnly + SameSite=Strict y cifrado PBKDF2-HMAC-SHA512.</p>
+            <div id="profile-details-box" class="mono" style="padding: 12px; background: var(--bg-subtle); border-radius: 8px;"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- VIEW 5: CONFIGURACIÓN DE ESCANEO AVANZADO (/scan/new)                -->
+    <!-- =================================================================== -->
+    <section id="view-scan-new" class="view-section" hidden aria-labelledby="adv-title">
+      <div class="advanced-card-wrap card card-elevated">
+        <h2 id="adv-title">Configuración de Auditoría Forense Profunda</h2>
+        <p class="text-muted">
+          Personaliza el perfil de navegador simulado, omite la caché distribuida KV o resguarda una instantánea sanitizada en Cloudflare R2.
+        </p>
+
+        <div id="adv-scan-error" class="feedback-alert feedback-error" role="alert" hidden></div>
+
+        <form id="adv-scan-form" novalidate>
+          <div class="form-field">
+            <label for="adv-url-input" class="form-label">URL Objetivo a Inspeccionar</label>
+            <input type="url" id="adv-url-input" class="url-input" placeholder="https://portal-verificacion.ejemplo.com" required>
+          </div>
+
+          <div class="form-field">
+            <label for="adv-ua-select" class="form-label">User-Agent Simulado</label>
+            <select id="adv-ua-select" class="form-select">
+              <option value="mobile_android">Móvil Android (Chrome 126 — Recomendado contra phishing móvil)</option>
+              <option value="mobile_ios">iPhone iOS (Safari 17.5 Mobile)</option>
+              <option value="desktop_chrome">Escritorio Windows (Chrome 126 Desktop)</option>
+            </select>
+          </div>
+
+          <label class="checkbox-row">
+            <input type="checkbox" id="adv-force-refresh">
+            <span><strong>Forzar escaneo en vivo</strong> (omitir caché Edge de 15 minutos en Cloudflare KV)</span>
+          </label>
+
+          <label class="checkbox-row">
+            <input type="checkbox" id="adv-save-snapshot" checked>
+            <span><strong>Guardar captura HTML sanitizada</strong> en bóveda forense inmutable (Cloudflare R2)</span>
+          </label>
+
+          <div class="form-field">
+            <label for="adv-case-note" class="form-label">Notas del caso (Opcional)</label>
+            <textarea id="adv-case-note" class="form-textarea" maxlength="500" placeholder="Ej: Enlace recibido por SMS suplantando entidad financiera..."></textarea>
+          </div>
+
+          <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+            <button type="submit" id="adv-submit-btn" class="btn btn-primary">Ejecutar Auditoría Profunda</button>
+            <button type="button" class="btn btn-secondary" data-nav="/">Volver al escáner rápido</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- VIEW 6: RESULTADO Y VISOR FORENSE (/scan/:id)                        -->
+    <!-- =================================================================== -->
+    <section id="view-scan-detail" class="view-section" hidden aria-label="Reporte Forense Detallado">
+      <div class="forensic-detail-wrap">
+        <!-- Sticky Top Action Bar -->
+        <div class="forensic-action-bar">
+          <button type="button" class="btn btn-secondary btn-sm" data-nav="/">
+            ← Nuevo Escaneo
+          </button>
+
+          <div class="action-btn-group">
+            <button type="button" id="btn-export-json" class="btn btn-secondary btn-sm">
+              ⬇ Exportar JSON Forense
+            </button>
+            <button type="button" id="btn-export-pdf" class="btn btn-secondary btn-sm">
+              🖨 Imprimir / PDF
+            </button>
+            <button type="button" id="btn-open-alert-modal" class="btn btn-danger btn-sm">
+              📢 Alertar Comunidad
+            </button>
+          </div>
+        </div>
+
+        <div id="detail-feedback" class="feedback-alert" hidden></div>
+
+        <!-- Rendered strictly via DOM APIs in ForensicViewer -->
+        <div id="forensic-report-mount" class="forensic-detail-wrap" style="margin:0;"></div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- VIEW 7: GUÍA CIUDADANA & VERIFICACIÓN SHA-256 (/how-it-works)        -->
+    <!-- =================================================================== -->
+    <section id="view-how-it-works" class="view-section" hidden aria-labelledby="how-title">
+      <div class="advanced-card-wrap card card-elevated">
+        <h2 id="how-title">Cómo Funciona Detector360 y Verificación Forense SHA-256</h2>
+        <p>
+          <strong>Detector360</strong> analiza enlaces sospechosos desde el borde de red (Cloudflare Edge) sin que tu navegador tenga que abrir el sitio malicioso ni ejecutar su código.
+        </p>
+
+        <h3>1. Tres Capas de Inspección en Tiempo Real</h3>
+        <ul>
+          <li><strong>Capa de Transporte y Red:</strong> Verifica si el sitio usa cifrado real <code>HTTPS/TLS</code>, rastrea hasta 5 redirecciones ocultas y audita cabeceras de defensa (<code>HSTS</code>, <code>CSP</code>, <code>X-Frame-Options</code>) con blindaje Anti-SSRF.</li>
+          <li><strong>Análisis Estático DOM Línea por Línea:</strong> Localiza etiquetas <code>&lt;form&gt;</code> cuyo atributo <code>action</code> envíe datos sin cifrar (<code>http://</code>) o hacia dominios externos (<em>Cross-Domain Exfiltration</em>), así como campos <code>&lt;input&gt;</code> de contraseñas o PIN desenmascarados.</li>
+          <li><strong>Rastreo de Scripts JS y Ofuscación:</strong> Detecta captura silenciosa de teclado (<code>keyup</code>, <code>blur</code>, <code>submit</code>) vinculada a <code>fetch()</code>, <code>XMLHttpRequest</code> o bots de Telegram/Discord, y código camuflado con <code>eval(atob(...))</code>.</li>
+        </ul>
+
+        <h3>2. Uso desde WhatsApp, Telegram o SMS (Web Share Target)</h3>
+        <p>
+          Instala <strong>Detector360</strong> en la pantalla de inicio de tu teléfono. Cuando recibas un mensaje dudoso, pulsa <em>Compartir</em> y elige <strong>Detector360</strong>: la app extraerá automáticamente el enlace del texto y ejecutará la auditoría.
+        </p>
+
+        <h3>3. Verificación Independiente de Integridad SHA-256</h3>
+        <p>
+          Cada archivo <code>.json</code> exportado incluye el objeto canónico <code>evidence_payload</code> y su firma criptográfica <code>integrity_sha256</code>. Cualquier perito bancario o autoridad puede comprobar que el reporte no fue alterado ejecutando:
+        </p>
+        <pre class="finding-snippet">node -e "const fs=require('fs'),crypto=require('crypto');const r=JSON.parse(fs.readFileSync('reporte.json'));console.log(crypto.createHash('sha256').update(JSON.stringify(r.evidence_payload)).digest('hex') === r.integrity_sha256);"</pre>
+
+        <div style="margin-top: 20px;">
+          <button type="button" class="btn btn-primary" data-nav="/">Ir al Escáner Ciudadano</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Community Alert Modal -->
+  <div id="community-alert-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-alert-title" hidden>
+    <div class="modal-card">
+      <h3 id="modal-alert-title">Publicar Alerta Comunitaria</h3>
+      <p class="text-muted">
+        El dominio malicioso se compartirá en el feed público para proteger a otros ciudadanos sin mostrar tu nombre ni correo.
+      </p>
+
+      <form id="community-alert-form">
+        <div class="form-field">
+          <label for="alert-channel-select" class="form-label">¿Por qué medio recibiste este enlace?</label>
+          <select id="alert-channel-select" class="form-select">
+            <option value="whatsapp">WhatsApp</option>
+            <option value="sms">Mensaje de Texto (SMS)</option>
+            <option value="telegram">Telegram</option>
+            <option value="email">Correo Electrónico</option>
+            <option value="social">Redes Sociales</option>
+            <option value="web">Búsqueda / Web</option>
+          </select>
+        </div>
+
+        <div class="form-field">
+          <label for="alert-note-input" class="form-label">Contexto breve para otros ciudadanos</label>
+          <textarea id="alert-note-input" class="form-textarea" maxlength="300" placeholder="Ej: Suplanta aviso de bloqueo de cuenta bancaria..."></textarea>
+        </div>
+
+        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+          <button type="button" id="modal-cancel-btn" class="btn btn-secondary btn-sm">Cancelar</button>
+          <button type="submit" id="modal-publish-btn" class="btn btn-danger btn-sm">Publicar Alerta</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <footer class="app-footer">
+    <div>
+      <strong>Detector360</strong> — Escáner Forense Web Ciudadano Anti-Phishing · Arquitectura Edge Serverless (Cloudflare Pages, Workers, D1, KV &amp; R2)
+    </div>
+  </footer>
+
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>

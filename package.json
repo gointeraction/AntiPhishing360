@@ -1,0 +1,31 @@
+{
+  "name": "detector360",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Detector360 - Escáner Forense Web Ciudadano Anti-Phishing y Auditoría de Transporte sobre Cloudflare Edge",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gointeraction/AntiPhishing360.git"
+  },
+  "homepage": "https://github.com/gointeraction/AntiPhishing360#readme",
+  "scripts": {
+    "dev": "wrangler dev --config worker/wrangler.toml --port 8787",
+    "dev:worker": "wrangler dev --config worker/wrangler.toml --port 8787",
+    "dev:pages": "wrangler pages dev frontend --port 8788 --proxy 8787",
+    "typecheck": "tsc --project worker/tsconfig.json --noEmit",
+    "db:migrate:local": "wrangler d1 migrations apply detector360-db --local --config worker/wrangler.toml",
+    "db:migrate:prod": "wrangler d1 migrations apply detector360-db --remote --config worker/wrangler.toml",
+    "deploy:worker": "wrangler deploy --config worker/wrangler.toml",
+    "deploy:pages": "wrangler pages deploy frontend --project-name detector360",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261113.1",
+    "typescript": "^5.7.2",
+    "vitest": "^3.0.0",
+    "wrangler": "^4.162.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

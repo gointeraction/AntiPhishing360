@@ -1,0 +1,6 @@
+# Copiar este archivo a worker/.dev.vars para desarrollo local con Wrangler.
+# NUNCA subir .dev.vars al repositorio de control de versiones.
+# En producción usar: npx wrangler secret put JWT_SECRET --config worker/wrangler.toml
+
+JWT_SECRET="reemplazar_por_secreto_criptografico_aleatorio_minimo_64_caracteres_hex"
+ALLOWED_ORIGIN="http://localhost:8788,http://127.0.0.1:8788,https://detector360.pages.dev,https://detector360.app"

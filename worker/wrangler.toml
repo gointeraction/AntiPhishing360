@@ -1,0 +1,32 @@
+name = "detector360-api"
+main = "src/index.ts"
+compatibility_date = "2026-11-01"
+workers_dev = true
+
+[assets]
+directory = "../frontend"
+not_found_handling = "single-page-application"
+run_worker_first = ["/api/*"]
+
+[vars]
+ALLOWED_ORIGIN = "https://detector360.pages.dev,https://detector360.app,http://localhost:8787,http://127.0.0.1:8787,http://localhost:8788,http://127.0.0.1:8788"
+ENVIRONMENT = "production"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "detector360-db"
+database_id = "00000000-0000-0000-0000-000000000000"
+migrations_dir = "migrations"
+
+[[kv_namespaces]]
+binding = "KV_CACHE"
+id = "00000000000000000000000000000000"
+preview_id = "00000000000000000000000000000001"
+
+[[r2_buckets]]
+binding = "R2_EVIDENCE"
+bucket_name = "detector360-evidence"
+preview_bucket_name = "detector360-evidence-preview"
+
+[observability]
+enabled = true

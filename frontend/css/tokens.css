@@ -1,0 +1,62 @@
+:root {
+  /* Cyber-Civic Shield Palette (Section 3.1) */
+  --color-primary: #0F2942;
+  --color-primary-hover: #1D4ED8;
+  --color-secondary: #334155;
+  --color-accent: #0284C7;
+
+  /* Backgrounds & Surfaces */
+  --bg-main: #F8FAFC;
+  --bg-surface: #FFFFFF;
+  --bg-subtle: #F1F5F9;
+  --bg-code: #0B1120;
+  --bg-code-header: #111827;
+
+  /* Text Hierarchy (WCAG 2.1 AA/AAA) */
+  --text-main: #0F172A;
+  --text-muted: #64748B;
+  --text-inverse: #FFFFFF;
+  --text-code: #E2E8F0;
+  --text-code-line: #64748B;
+
+  /* Borders */
+  --border-subtle: #E2E8F0;
+  --border-strong: #CBD5E1;
+
+  /* Semantic Citizen Traffic Light Alerts */
+  --safe-main: #16A34A;
+  --safe-bg: #DCFCE7;
+  --safe-text: #14532D;
+
+  --warn-main: #D97706;
+  --warn-bg: #FEF3C7;
+  --warn-text: #78350F;
+
+  --crit-main: #DC2626;
+  --crit-bg: #FEE2E2;
+  --crit-text: #7F1D1D;
+  --crit-code-highlight: rgba(220, 38, 38, 0.25);
+
+  /* Typography */
+  --font-ui: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* 8px Base Spacing Scale */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+
+  /* Border Radius */
+  --radius-card: 12px;
+  --radius-control: 8px;
+  --radius-badge: 6px;
+  --radius-full: 50%;
+
+  /* Elevation Shadows */
+  --shadow-sm: 0 1px 3px rgba(15, 41, 66, 0.06), 0 1px 2px rgba(15, 41, 66, 0.04);
+  --shadow-md: 0 8px 24px rgba(15, 41, 66, 0.08), 0 2px 6px rgba(15, 41, 66, 0.04);
+  --shadow-focus: 0 0 0 3px rgba(29, 78, 216, 0.3);
+}

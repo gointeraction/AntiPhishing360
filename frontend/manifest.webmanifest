@@ -1,0 +1,37 @@
+{
+  "name": "Detector360 — Escáner Forense Web Ciudadano",
+  "short_name": "Detector360",
+  "description": "Verifica enlaces sospechosos en segundos auditando cifrado HTTPS/TLS y código fuente HTML/JS línea por línea antes de ingresar tus datos.",
+  "lang": "es",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#0F2942",
+  "background_color": "#F8FAFC",
+  "categories": ["security", "utilities", "productivity"],
+  "icons": [
+    {
+      "src": "/assets/icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "share_target": {
+    "action": "/index.html",
+    "method": "GET",
+    "enctype": "application/x-www-form-urlencoded",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  }
+}
