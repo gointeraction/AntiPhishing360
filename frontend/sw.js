@@ -1,7 +1,8 @@
-const CACHE_NAME = 'detector360-edge-v2.5.0';
+const CACHE_NAME = 'detector360-edge-v2.6.0';
 const SHELL_ASSETS = [
   '/',
   '/index.html',
+  '/guardian.html',
   '/login.html',
   '/register.html',
   '/dashboard.html',
@@ -10,9 +11,12 @@ const SHELL_ASSETS = [
   '/manifest.webmanifest',
   '/css/tokens.css',
   '/css/landing.css',
+  '/css/senior.css',
   '/css/app.css',
   '/js/api-client.js',
   '/js/icons.js',
+  '/js/senior-shield.js',
+  '/js/guardian-view.js',
   '/js/landing.js',
   '/js/auth.js',
   '/js/dashboard.js',

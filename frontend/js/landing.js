@@ -9,6 +9,12 @@ import {
 import { ExportService } from './export-service.js';
 import { createSvgIcon } from './icons.js';
 import { initPwaSupport } from './pwa-install.js';
+import {
+  buildSeniorAssistActionsBar,
+  executeSeniorMessageAnalysis,
+  handlePostVerdictSeniorProtections,
+  initSeniorProtectionSuite,
+} from './senior-shield.js';
 
 const XRAY_HOTSPOTS = {
   1: {
@@ -35,6 +41,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   initHeroWidescreenVideo();
   initFooterCicpcVideo();
   initHeroScanner();
+  initSeniorProtectionSuite({ onScanUrl: (url) => executeHeroScan(url) });
   initXraySimulator();
   initScamCards();
   initPlanLeadModal();
@@ -186,6 +193,17 @@ async function executeHeroScan(rawUrl) {
       errorBanner.textContent = 'Pega primero el enlace sospechoso que deseas revisar.';
       errorBanner.classList.add('visible');
     }
+    return;
+  }
+
+  // Si un adulto mayor pega un mensaje completo de WhatsApp/SMS en la barra superior, analizar el texto completo
+  if (/\s/.test(trimmed) && !/^https?:\/\/\S+$/i.test(trimmed)) {
+    const seniorArea = document.getElementById('senior-message-textarea');
+    if (seniorArea) {
+      seniorArea.value = trimmed;
+      seniorArea.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    await executeSeniorMessageAnalysis(trimmed);
     return;
   }
 
@@ -383,6 +401,8 @@ function renderInstantVerdict(report) {
   }
 
   card.appendChild(actionsBar);
+  card.appendChild(buildSeniorAssistActionsBar(report));
+  handlePostVerdictSeniorProtections(report);
 }
 
 function initXraySimulator() {

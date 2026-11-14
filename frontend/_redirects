@@ -5,3 +5,4 @@
 /scan/:id /scan.html 200
 /cicpc/login /cicpc-login.html 200
 /cicpc /cicpc.html 200
+/guardian /guardian.html 200

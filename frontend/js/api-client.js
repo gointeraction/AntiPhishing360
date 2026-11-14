@@ -163,6 +163,54 @@ export class ApiClient {
   static cicpcExportSuricataRules() {
     return this.request('/cicpc/rules/suricata', { method: 'GET' });
   }
+
+  // --------------------------------------------------------------------------
+  // Módulo 5: Protección Integral Adulto Mayor y Ángel Guardián
+  // --------------------------------------------------------------------------
+  static analyzeSeniorMessage(messageText) {
+    return this.request('/senior/analyze-message', {
+      method: 'POST',
+      body: JSON.stringify({ message_text: messageText }),
+    });
+  }
+
+  static searchVerifiedDirectory(query = '', category = 'ALL') {
+    const qs = new URLSearchParams();
+    if (query) qs.set('q', query);
+    if (category && category !== 'ALL') qs.set('category', category);
+    return this.request(`/senior/directory?${qs.toString()}`, { method: 'GET' });
+  }
+
+  static getSeniorSimulator() {
+    return this.request('/senior/simulator', { method: 'GET' });
+  }
+
+  static createGuardianAlert(payload) {
+    return this.request('/senior/guardian/ask', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  }
+
+  static getGuardianConsultation(token) {
+    return this.request(`/senior/guardian/${encodeURIComponent(token)}`, {
+      method: 'GET',
+    });
+  }
+
+  static replyGuardianConsultation(token, decision, note = '') {
+    return this.request(`/senior/guardian/${encodeURIComponent(token)}/reply`, {
+      method: 'POST',
+      body: JSON.stringify({ decision, note }),
+    });
+  }
+
+  static submitSeniorEmergency(payload) {
+    return this.request('/senior/emergency-report', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  }
 }
 
 export function showToast(message, isError = false) {

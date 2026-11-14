@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Ángel Guardián Familiar — Detector360</title>
+
+  <link rel="icon" href="/assets/images/logo-emblem.png" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Montserrat:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/css/tokens.css?v=2.6">
+  <link rel="stylesheet" href="/css/landing.css?v=2.6">
+  <link rel="stylesheet" href="/css/senior.css?v=2.6">
+</head>
+<body class="cyber-grid-bg pcb-section-bg" style="min-height:100vh;">
+
+  <div class="navbar-wrapper">
+    <header class="navbar">
+      <div class="navbar-inner">
+        <a href="/" class="brand-logo" aria-label="Detector360 Inicio">
+          <img src="/assets/images/logo-emblem.png" alt="Escudo Oficial Detector360" class="brand-logo-img" width="42" height="42">
+          <span class="brand-wordmark">
+            <span class="brand-wordmark-main">Detector<span class="accent">360</span></span>
+            <span class="brand-wordmark-sub">Ángel Guardián</span>
+          </span>
+        </a>
+        <div class="nav-actions">
+          <a href="/" class="btn btn-outline-cyan btn-sm">Ir al Escáner Principal</a>
+        </div>
+      </div>
+    </header>
+  </div>
+
+  <main class="container" style="padding: 48px 20px 80px; max-width: 760px;">
+    <div id="guardian-loading" class="senior-module-card" style="text-align:center;">
+      <h2>Cargando consulta de tu familiar...</h2>
+      <p style="color:#C8DDF8;">Recuperando el análisis preventivo de Detector360.</p>
+    </div>
+
+    <div id="guardian-error" class="senior-module-card emergency-accent" style="display:none;">
+      <h2>No encontramos esta consulta familiar</h2>
+      <p id="guardian-error-msg" style="color:#FFE4E8;">Verifica el enlace que te compartió tu familiar.</p>
+      <a href="/" class="btn btn-primary" style="width:fit-content;">Analizar un enlace ahora</a>
+    </div>
+
+    <section id="guardian-content" class="senior-module-card" style="display:none;" aria-label="Revisión familiar en un toque">
+      <div class="senior-card-kicker">
+        <span class="status-led cyan" aria-hidden="true"></span>
+        <span id="guardian-mode-label">RED DE APOYO FAMILIAR • ÁNGEL GUARDIÁN</span>
+      </div>
+
+      <h1 id="guardian-headline" style="font-size:1.65rem; color:#FFFFFF; margin:0;">
+        Tu familiar necesita tu orientación
+      </h1>
+
+      <p id="guardian-subtext" style="color:#DCEBFB; font-size:1.05rem; margin:0;"></p>
+
+      <div style="background:rgba(2,10,32,0.88); border:1.5px solid rgba(0,225,255,0.35); border-radius:16px; padding:18px; display:grid; gap:10px;">
+        <div style="display:flex; flex-wrap:wrap; justify-content:space-between; gap:8px; align-items:center;">
+          <span style="font-size:0.85rem; color:#9CC4F6;">Diagnóstico Automático Detector360:</span>
+          <span id="guardian-risk-badge" class="badge badge-critical">Riesgo Detectado</span>
+        </div>
+
+        <div id="guardian-url-row" style="display:none;">
+          <span style="font-size:0.8rem; color:#9CC4F6; display:block;">Dirección o Enlace Sospechoso (No abrir directamente):</span>
+          <code id="guardian-target-url" style="word-break:break-all; color:#FDE047; font-size:0.95rem;"></code>
+        </div>
+
+        <div id="guardian-excerpt-row" style="display:none;">
+          <span style="font-size:0.8rem; color:#9CC4F6; display:block;">Texto o Resumen Recibido:</span>
+          <p id="guardian-message-excerpt" style="margin:4px 0 0; color:#FFFFFF; font-size:0.98rem;"></p>
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-top:6px;">
+        <label for="guardian-note-input" class="form-label" style="color:#FFFFFF;">
+          Nota cariñosa opcional para tu familiar (aparecerá en su pantalla):
+        </label>
+        <input
+          type="text"
+          id="guardian-note-input"
+          class="form-input"
+          placeholder="Ej: Mamá, no toques ese enlace, bórralo ya que te llamo en un minuto."
+        >
+      </div>
+
+      <div class="sim-choice-row">
+        <button type="button" id="btn-reply-danger" class="btn btn-primary" style="background:#DC2626; border-color:#FCA5A5; min-height:60px; font-size:1.02rem;">
+          <span>RESPONDER: BÓRRALO YA (PELIGRO)</span>
+        </button>
+
+        <button type="button" id="btn-reply-safe" class="btn btn-outline-cyan" style="border-color:#10B981; color:#A7F3D0; min-height:60px; font-size:1.02rem;">
+          <span>RESPONDER: ES SEGURO</span>
+        </button>
+      </div>
+
+      <div id="guardian-reply-confirmation" class="guardian-live-status" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <script type="module" src="/js/guardian-view.js?v=2.6"></script>
+</body>
+</html>

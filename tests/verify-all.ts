@@ -506,6 +506,152 @@ async function runVerification() {
     assert.ok(suricataBody.data.rules_text.includes('sid:6090001;'));
     console.log('✅ 15. Motor Heurístico Predictivo Day-Zero (julioliraup/Antiphishing: Homógrafos, Typosquatting, NRD y Reglas Suricata IDS/IPS) verificado.');
 
+    // 16. Verificar Suite Integral Adulto Mayor (Modo Letra Grande, Voz, Ángel Guardián, Mensajes/OCR, QR, Directorio Blanco, Anti-Pánico, Emergencia y Simulador)
+    const guardianPageRes = await dispatch('/guardian');
+    assert.equal(guardianPageRes.status, 200);
+    const guardianHtml = await guardianPageRes.text();
+    assert.equal(emojiRegex.test(guardianHtml), false, 'Cero emojis en guardian.html');
+    assert.ok(
+      (guardianPageRes.headers.get('permissions-policy') || '').includes('camera=(self)'),
+      'Permissions-Policy debe permitir cámara local para el escáner QR Anti-Quishing'
+    );
+
+    for (const uiId of [
+      'btn-senior-mode-toggle',
+      'senior-giant-paste-bar',
+      'senior-semaphore-banner',
+      'escudo-adulto-mayor',
+      'anti-panic-modal',
+      'senior-emergency-modal',
+    ]) {
+      assert.ok(indexHtml.includes(uiId), `index.html debe integrar componente Adulto Mayor #${uiId}`);
+    }
+
+    // 16a. Analizador de Mensajes Completos / Texto OCR ("Hola mamá, cambié de número" y "Pensión vence en 10 min")
+    const familyScamMsgRes = await dispatch('/api/v1/senior/analyze-message', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message_text:
+          'Hola mamá, bendición. Cambié de número porque se me dañó el celular. Necesito un pago móvil urgente antes de 10 minutos.',
+      }),
+    });
+    assert.equal(familyScamMsgRes.status, 201);
+    const familyScamBody = (await familyScamMsgRes.json()) as {
+      success: boolean;
+      data: {
+        scan_id: string;
+        risk_level: string;
+        risk_score: number;
+        requires_anti_panic_pause: boolean;
+        spoken_script: string;
+        findings: Array<{ rule_code: string }>;
+      };
+    };
+    assert.equal(familyScamBody.data.risk_level, 'CRITICAL');
+    assert.equal(familyScamBody.data.requires_anti_panic_pause, true);
+    assert.ok(familyScamBody.data.spoken_script.includes('Semáforo en Rojo'));
+    assert.ok(
+      familyScamBody.data.findings.some((f) => f.rule_code === 'SENIOR_FAMILY_IMPERSONATION')
+    );
+
+    const pensionMsgRes = await dispatch('/api/v1/senior/analyze-message', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message_text:
+          'AVISO IVSS: Tu bono especial de pensión vence en 10 minutos, reclámalo en http://bono-ivss-urgente.xyz/cobro',
+      }),
+    });
+    assert.equal(pensionMsgRes.status, 201);
+    const pensionMsgBody = (await pensionMsgRes.json()) as {
+      data: { risk_level: string; findings: Array<{ rule_code: string }> };
+    };
+    assert.equal(pensionMsgBody.data.risk_level, 'CRITICAL');
+    assert.ok(
+      pensionMsgBody.data.findings.some((f) => f.rule_code === 'SENIOR_PENSION_BONUS_LURE')
+    );
+
+    // 16b. Red de Apoyo Familiar ("Ángel Guardián" en 1 Toque + Respuesta del Hijo)
+    const askGuardianRes = await dispatch('/api/v1/senior/guardian/ask', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        scan_id: familyScamBody.data.scan_id,
+        senior_name: 'Mamá Carmen',
+        guardian_name: 'Hijo Carlos',
+        guardian_phone: '+584125550199',
+        alert_mode: 'ASK_GUARDIAN',
+        message_excerpt: 'Hola mamá cambié de número...',
+        risk_score: familyScamBody.data.risk_score,
+        risk_level: 'CRITICAL',
+      }),
+    });
+    assert.equal(askGuardianRes.status, 201);
+    const askGuardianBody = (await askGuardianRes.json()) as {
+      data: {
+        consultation: { token: string; guardian_decision: string };
+        review_url: string;
+        whatsapp_share_url: string;
+      };
+    };
+    assert.equal(askGuardianBody.data.consultation.guardian_decision, 'PENDING');
+    assert.ok(askGuardianBody.data.review_url.includes('/guardian?token='));
+    assert.ok(askGuardianBody.data.whatsapp_share_url.startsWith('https://wa.me/'));
+
+    const replyGuardianRes = await dispatch(
+      `/api/v1/senior/guardian/${askGuardianBody.data.consultation.token}/reply`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          decision: 'DANGER_DELETE',
+          note: 'Mamá, soy Carlos desde mi número real, bórralo ya que es falso.',
+        }),
+      }
+    );
+    assert.equal(replyGuardianRes.status, 200);
+    const replyGuardianBody = (await replyGuardianRes.json()) as {
+      data: { consultation: { guardian_decision: string; guardian_note: string } };
+    };
+    assert.equal(replyGuardianBody.data.consultation.guardian_decision, 'DANGER_DELETE');
+
+    // 16c. Directorio Blanco Oficial Verificado y Simulador de 3 Preguntas
+    const dirRes = await dispatch('/api/v1/senior/directory?q=banesco');
+    assert.equal(dirRes.status, 200);
+    const dirBody = (await dirRes.json()) as {
+      data: { items: Array<{ official_domain: string; emergency_phone: string }> };
+    };
+    assert.equal(dirBody.data.items.length, 1);
+    assert.equal(dirBody.data.items[0].official_domain, 'banesco.com');
+    assert.equal(dirBody.data.items[0].emergency_phone, '0500-2263726');
+
+    const simRes = await dispatch('/api/v1/senior/simulator');
+    assert.equal(simRes.status, 200);
+    const simBody = (await simRes.json()) as { data: { total: number; questions: unknown[] } };
+    assert.equal(simBody.data.total, 3);
+    assert.equal(simBody.data.questions.length, 3);
+
+    // 16d. Botón de Emergencia "¿Ya diste tu clave o hiciste un pago?" -> Expediente URGENT en C.I.C.P.C
+    const emergRes = await dispatch('/api/v1/senior/emergency-report', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        bank_slug: 'banco-de-venezuela',
+        incident_impact: 'FINANCIAL_LOSS',
+        reporter_contact: '0414-5550011',
+        suspect_info: '+58 412-900-4411',
+      }),
+    });
+    assert.equal(emergRes.status, 201);
+    const emergBody = (await emergRes.json()) as {
+      data: { case_number: string; priority: string; emergency_phone: string };
+    };
+    assert.ok(emergBody.data.case_number.startsWith('EXP-DIDI-2026-'));
+    assert.equal(emergBody.data.priority, 'URGENT');
+    assert.equal(emergBody.data.emergency_phone, '0500-6425283');
+    console.log('✅ 16. Suite Integral Adulto Mayor (Letra Grande, Voz, Ángel Guardián, Mensajes/OCR, QR, Directorio Blanco, Anti-Pánico, Emergencia y Simulador) verificada.');
+
     console.log('\n🎉 TODAS LAS PRUEBAS DE ARQUITECTURA, SEGURIDAD Y PRODUCTO PASARON EXITOSAMENTE.');
   } finally {
     try {

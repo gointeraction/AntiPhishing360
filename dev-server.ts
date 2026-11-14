@@ -254,6 +254,8 @@ export async function handleEdgeRequest(
     filePath = path.join(FRONTEND_DIR, 'cicpc.html');
   } else if (pathname === '/cicpc/login' || pathname === '/cicpc/login/') {
     filePath = path.join(FRONTEND_DIR, 'cicpc-login.html');
+  } else if (pathname === '/guardian' || pathname === '/guardian/') {
+    filePath = path.join(FRONTEND_DIR, 'guardian.html');
   } else {
     const candidate = path.normalize(path.join(FRONTEND_DIR, pathname));
     if (

@@ -4,6 +4,7 @@ import { ScanController } from './controllers/scan.controller.ts';
 import { CommercialController } from './controllers/commercial.controller.ts';
 import { CommunityController } from './controllers/community.controller.ts';
 import { CicpcController } from './controllers/cicpc.controller.ts';
+import { SeniorController } from './controllers/senior.controller.ts';
 import { jsonResponse } from './middlewares/security.middleware.ts';
 
 type RouteHandler = (rc: RequestContext) => Promise<Response>;
@@ -57,6 +58,15 @@ export class ApiRouter {
     this.add('GET', '/api/v1/cicpc/cases/:case_id', CicpcController.getCaseDetail);
     this.add('PATCH', '/api/v1/cicpc/cases/:case_id', CicpcController.updateCaseDecision);
     this.add('GET', '/api/v1/cicpc/rules/suricata', CicpcController.exportSuricataRules);
+
+    // Module 5: Senior Protection ("Modo Adulto Mayor", Ángel Guardián, OCR/Message, Directory & Emergency)
+    this.add('POST', '/api/v1/senior/analyze-message', SeniorController.analyzeMessage);
+    this.add('GET', '/api/v1/senior/directory', SeniorController.listDirectory);
+    this.add('GET', '/api/v1/senior/simulator', SeniorController.getSimulatorQuestions);
+    this.add('POST', '/api/v1/senior/guardian/ask', SeniorController.createGuardianAlert);
+    this.add('GET', '/api/v1/senior/guardian/:token', SeniorController.getGuardianConsultation);
+    this.add('POST', '/api/v1/senior/guardian/:token/reply', SeniorController.replyGuardianConsultation);
+    this.add('POST', '/api/v1/senior/emergency-report', SeniorController.submitEmergencyReport);
   }
 
   private add(method: string, pathTemplate: string, handler: RouteHandler): void {

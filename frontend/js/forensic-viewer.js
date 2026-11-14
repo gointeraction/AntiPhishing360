@@ -7,6 +7,12 @@ import {
 } from './api-client.js';
 import { ExportService } from './export-service.js';
 import { initPwaSupport } from './pwa-install.js';
+import {
+  buildVerdictSpeechScript,
+  isAutoVoiceEnabled,
+  isSeniorModeActive,
+  speakTextAloud,
+} from './senior-shield.js';
 
 let loadedReport = null;
 let activeUser = null;
@@ -312,11 +318,21 @@ function populateSourceViewer(report) {
 }
 
 function bindReportActions(report) {
+  if (isSeniorModeActive()) {
+    document.documentElement.classList.add('senior-mode');
+  }
+  if (isAutoVoiceEnabled()) {
+    speakTextAloud(buildVerdictSpeechScript(report));
+  }
+
+  const btnSpeak = document.getElementById('btn-speak-report');
   const btnPdf = document.getElementById('btn-export-pdf');
   const btnJson = document.getElementById('btn-export-json');
   const btnWa = document.getElementById('btn-share-whatsapp');
   const btnCopy = document.getElementById('btn-copy-summary');
   const btnCommunity = document.getElementById('btn-report-community');
+
+  if (btnSpeak) btnSpeak.onclick = () => speakTextAloud(buildVerdictSpeechScript(report));
 
   if (btnPdf) btnPdf.onclick = () => ExportService.printPdfReport();
   if (btnJson) btnJson.onclick = () => ExportService.downloadJsonEvidence(report);

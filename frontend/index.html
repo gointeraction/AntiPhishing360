@@ -13,8 +13,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Montserrat:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="/css/tokens.css?v=2.4">
-  <link rel="stylesheet" href="/css/landing.css?v=2.4">
+  <link rel="stylesheet" href="/css/tokens.css?v=2.6">
+  <link rel="stylesheet" href="/css/landing.css?v=2.6">
+  <link rel="stylesheet" href="/css/senior.css?v=2.6">
 </head>
 <body class="cyber-grid-bg pcb-section-bg">
 
@@ -38,13 +39,43 @@
 
         <nav id="navbar-links" class="nav-links" aria-label="Navegación principal">
           <a href="#hero-scanner">Escáner Gratis</a>
+          <a href="#escudo-adulto-mayor">Adulto Mayor</a>
           <a href="#como-funciona">Cómo Funciona</a>
           <a href="#enganos-comunes">Engaños Comunes</a>
-          <a href="#alertas-vivo">Alertas en Vivo</a>
           <a href="#planes">Planes</a>
         </nav>
 
         <div class="nav-actions">
+          <button
+            type="button"
+            id="btn-senior-mode-toggle"
+            class="senior-mode-nav-btn"
+            aria-pressed="false"
+            title="Activa letra grande, alto contraste y lectura por voz automática"
+          >
+            <svg class="icon-svg" style="width:16px; height:16px;" viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
+              <line x1="9" y1="9" x2="9.01" y2="9"></line>
+              <line x1="15" y1="9" x2="15.01" y2="9"></line>
+            </svg>
+            <span data-senior-label="1">Modo Adulto Mayor</span>
+          </button>
+
+          <button
+            type="button"
+            class="emergency-top-pill"
+            data-open-senior-emergency="1"
+            title="Ayuda urgente si ya entregaste tu clave o hiciste un pago"
+          >
+            <svg class="icon-svg" style="width:15px; height:15px;" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+              <line x1="12" y1="9" x2="12" y2="13"></line>
+              <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+            <span>Emergencia</span>
+          </button>
+
           <div id="navbar-auth-actions" style="display:flex; gap:10px; align-items:center;">
             <a href="/login" class="btn btn-ghost btn-sm">Iniciar Sesión</a>
             <a href="/register" class="btn btn-outline-cyan btn-sm">Crear Cuenta Gratis</a>
@@ -253,6 +284,24 @@
                     <div id="scan-progress-bar" class="scan-progress-bar"></div>
                   </div>
                 </div>
+
+                <!-- Barra Ultra-Simplificada de Alto Contraste (Modo Adulto Mayor / Letra Grande) -->
+                <div id="senior-giant-paste-bar" class="senior-giant-paste-bar" role="region" aria-label="Botón gigante para personas mayores">
+                  <div style="flex:1 1 240px;">
+                    <strong style="display:block; color:#FFFFFF; font-size:1.08rem;">Modo Adulto Mayor Activo (Letra Grande + Voz)</strong>
+                    <span style="color:#C8DDF8; font-size:0.95rem;">Copia el mensaje o enlace de WhatsApp y toca el botón amarillo gigante:</span>
+                  </div>
+                  <button type="button" id="btn-senior-giant-paste" class="senior-giant-paste-cta">
+                    <svg class="icon-svg" style="width:24px; height:24px;" viewBox="0 0 24 24" aria-hidden="true">
+                      <rect x="9" y="2" width="6" height="4" rx="1"></rect>
+                      <path d="M8 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2"></path>
+                    </svg>
+                    <span>PEGAR Y REVISAR AHORA</span>
+                  </button>
+                </div>
+
+                <!-- Semáforo Gigante Pantalla Clara (Verde / Amarillo / Rojo) -->
+                <div id="senior-semaphore-banner" class="senior-semaphore-banner" aria-live="assertive"></div>
 
                 <div id="scanner-error-banner" class="scanner-error-banner" role="alert"></div>
                 <div id="instant-verdict-card" class="instant-verdict-card" aria-live="polite"></div>
@@ -882,6 +931,286 @@
 
     <div class="section-divider" aria-hidden="true"></div>
 
+    <!-- BLOQUE ESPECIAL: MÓDULO INTEGRAL ADULTO MAYOR Y ÁNGEL GUARDIÁN -->
+    <section id="escudo-adulto-mayor" class="senior-hub-section" aria-label="Protección especializada para personas mayores y apoyo familiar">
+      <div class="container">
+        <div class="section-header">
+          <span class="badge badge-tech">Protección Especializada para Padres y Abuelos</span>
+          <h2 style="margin-top:14px;">Centro de Seguridad Adulto Mayor y Red Familiar "Ángel Guardián"</h2>
+          <p>
+            Diseñado con accesibilidad visual, lectura por voz pausada, detector de mensajes completos de WhatsApp, escáner seguro de códigos QR, directorio oficial verificado y ayuda inmediata sin tecnicismos.
+          </p>
+
+          <div class="senior-hub-top-actions">
+            <button type="button" id="btn-hub-senior-mode" class="btn btn-primary" aria-pressed="false">
+              Activar Letra Grande y Voz Automática
+            </button>
+
+            <label style="display:inline-flex; align-items:center; gap:8px; padding:10px 16px; border-radius:999px; background:rgba(10,61,145,0.55); border:1px solid rgba(0,225,255,0.4); color:#FFFFFF; cursor:pointer; font-weight:600;">
+              <input type="checkbox" id="chk-senior-auto-voice" style="width:18px; height:18px;">
+              <span>Asistente Hablado Automático (Leer resultados en voz alta)</span>
+            </label>
+
+            <button type="button" class="btn btn-danger-soft" style="background:#DC2626; color:#FFFFFF; border-color:#FCA5A5;" data-open-senior-emergency="1">
+              ¿Ya diste tu clave o hiciste un pago? Emergencia Aquí
+            </button>
+          </div>
+        </div>
+
+        <div class="senior-bento-grid">
+
+          <!-- 1. ANALIZADOR DE MENSAJES COMPLETOS Y CAPTURAS DE PANTALLA (WHATSAPP / SMS / OCR) -->
+          <article class="senior-module-card">
+            <div class="senior-card-kicker">
+              <span class="status-led cyan" aria-hidden="true"></span>
+              <span>MENSAJES COMPLETOS Y CAPTURAS DE PANTALLA</span>
+            </div>
+            <h3 style="margin:0; color:#FFFFFF;">Pegar Mensaje de WhatsApp / SMS o Subir Captura</h3>
+            <p style="margin:0; color:#C8DDF8; font-size:0.95rem;">
+              No necesitas recortar el enlace: pega el texto entero que te reenviaron o sube la captura de pantalla para detectar engaños como <em>"Hola mamá, cambié de número"</em> o <em>"Tu pensión vence en 10 minutos"</em>.
+            </p>
+
+            <div class="quick-demos-row" style="margin-top:2px;">
+              <span style="color:#DCEBFB;">Ejemplos reales:</span>
+              <button
+                type="button"
+                class="demo-chip danger-chip"
+                data-demo-senior-msg="Hola mamá, bendición. Cambié de número porque se me cayó el celular al agua. Necesito hacer un pago urgente de $90, ¿me prestas por Pago Móvil?"
+              >
+                <span class="status-led critical" aria-hidden="true"></span>
+                <span>"Hola mamá, cambié de número"</span>
+              </button>
+              <button
+                type="button"
+                class="demo-chip danger-chip"
+                data-demo-senior-msg="AVISO IVSS: Tu bono especial de pensión vence en 10 minutos. Reclámalo ahora ingresando tus datos en http://bono-pension-activa.xyz/cobro"
+              >
+                <span class="status-led critical" aria-hidden="true"></span>
+                <span>"Tu pensión vence en 10 min"</span>
+              </button>
+              <button
+                type="button"
+                class="demo-chip danger-chip"
+                data-demo-senior-msg="Ganaste un mercado gratis por aniversario. Pásame el código de verificación de 6 dígitos que acaba de llegar por SMS a tu teléfono."
+              >
+                <span class="status-led warning" aria-hidden="true"></span>
+                <span>"Pásame el código de 6 dígitos"</span>
+              </button>
+            </div>
+
+            <form id="senior-message-form">
+              <label for="senior-message-textarea" class="sr-only">Pega aquí el mensaje completo de WhatsApp o SMS</label>
+              <textarea
+                id="senior-message-textarea"
+                class="senior-textarea-lg"
+                placeholder="Pega aquí todo el mensaje que recibiste en WhatsApp o SMS..."
+              ></textarea>
+
+              <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:12px;">
+                <button type="submit" id="btn-analyze-senior-msg" class="btn btn-primary">
+                  <svg class="icon-svg" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    <path d="m9 12 2 2 4-4"></path>
+                  </svg>
+                  <span>Revisar Mensaje Ahora</span>
+                </button>
+
+                <label for="screenshot-file-input" class="btn btn-outline-cyan" style="cursor:pointer;">
+                  <svg class="icon-svg" viewBox="0 0 24 24" aria-hidden="true">
+                    <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                    <polyline points="21 15 16 10 5 21"></polyline>
+                  </svg>
+                  <span>Subir Captura de Pantalla</span>
+                </label>
+                <input type="file" id="screenshot-file-input" accept="image/*" class="sr-only">
+
+                <button type="button" id="btn-demo-screenshot" class="btn btn-ghost btn-sm">
+                  <span>Probar Captura de Estafa (Demo)</span>
+                </button>
+              </div>
+            </form>
+
+            <div id="screenshot-preview-frame" class="screenshot-preview-frame">
+              <img id="screenshot-preview-img" alt="Vista previa despejada de la captura de pantalla analizada">
+              <div id="screenshot-preview-caption" class="screenshot-caption-strip"></div>
+            </div>
+
+            <div id="senior-message-verdict-box" class="instant-verdict-card" aria-live="polite"></div>
+          </article>
+
+          <!-- 2. RED DE APOYO FAMILIAR ("ÁNGEL GUARDIÁN") -->
+          <article id="guardian-card-anchor" class="senior-module-card">
+            <div class="senior-card-kicker">
+              <span class="status-led safe" aria-hidden="true"></span>
+              <span>RED DE APOYO FAMILIAR • ÁNGEL GUARDIÁN</span>
+            </div>
+            <h3 style="margin:0; color:#FFFFFF;">Preguntar a mi Hijo o Familiar de Confianza en 1 Toque</h3>
+            <p style="margin:0; color:#C8DDF8; font-size:0.95rem;">
+              Designa a tu hijo, hija o nieto de confianza. Si tienes dudas ante un enlace o cuando se detecte un <strong>Peligro Crítico Rojo</strong>, recibirá un aviso inmediato para responderte desde su celular <strong>"Es seguro"</strong> o <strong>"Bórralo ya"</strong>.
+            </p>
+
+            <form id="guardian-config-form" style="display:grid; gap:12px;">
+              <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:10px;">
+                <div>
+                  <label for="guardian-senior-name" class="form-label" style="color:#DCEBFB;">Tu nombre o apodo</label>
+                  <input type="text" id="guardian-senior-name" class="form-input" placeholder="Ej: Mamá Carmen" value="Mamá Carmen">
+                </div>
+                <div>
+                  <label for="guardian-family-name" class="form-label" style="color:#DCEBFB;">Familiar de confianza</label>
+                  <input type="text" id="guardian-family-name" class="form-input" placeholder="Ej: Mi hijo Carlos" required>
+                </div>
+              </div>
+
+              <div>
+                <label for="guardian-family-phone" class="form-label" style="color:#DCEBFB;">Teléfono WhatsApp de tu familiar</label>
+                <input type="tel" id="guardian-family-phone" class="form-input" placeholder="Ej: +58 412 555 0199">
+              </div>
+
+              <label style="display:flex; align-items:flex-start; gap:10px; color:#DCEBFB; font-size:0.9rem; cursor:pointer;">
+                <input type="checkbox" id="guardian-auto-critical-chk" checked style="margin-top:4px; width:18px; height:18px;">
+                <span><strong>Alerta Automática ante Peligro Crítico (Escudo Familiar):</strong> preparar alerta inmediata para mi familiar cada vez que revise un enlace Rojo Peligroso.</span>
+              </label>
+
+              <div style="display:flex; flex-wrap:wrap; gap:10px;">
+                <button type="submit" class="btn btn-outline-cyan btn-sm">
+                  <span>Guardar mi Ángel Guardián</span>
+                </button>
+                <button type="button" id="btn-ask-guardian-direct" class="btn btn-sm btn-guardian-ask">
+                  <span>Preguntar a mi Familiar Ahora (1 Toque)</span>
+                </button>
+              </div>
+            </form>
+
+            <div id="guardian-live-status-box" class="guardian-live-status" aria-live="polite"></div>
+          </article>
+
+          <!-- 3. ESCÁNER SEGURO DE CÓDIGOS QR (ANTI-QUISHING) -->
+          <article class="senior-module-card">
+            <div class="senior-card-kicker">
+              <span class="status-led cyan" aria-hidden="true"></span>
+              <span>ESCÁNER SEGURO DE CÓDIGOS QR • ANTI-QUISHING</span>
+            </div>
+            <h3 style="margin:0; color:#FFFFFF;">Revisar Códigos QR antes de Abrirlos</h3>
+            <p style="margin:0; color:#C8DDF8; font-size:0.95rem;">
+              Evita trampas en supuestos recibos de servicios públicos, menús alterados o sorteos falsos. Detector360 lee el código QR con tu cámara y revisa hacia dónde dirige <strong>sin abrir la página peligrosa</strong>.
+            </p>
+
+            <div style="display:flex; flex-wrap:wrap; gap:10px;">
+              <button type="button" id="btn-qr-start-camera" class="btn btn-primary btn-sm">
+                <svg class="icon-svg" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                  <circle cx="12" cy="13" r="4"></circle>
+                </svg>
+                <span>Abrir Cámara Segura QR</span>
+              </button>
+
+              <label for="qr-file-input" class="btn btn-outline-cyan btn-sm" style="cursor:pointer;">
+                <span>Subir Imagen con QR</span>
+              </label>
+              <input type="file" id="qr-file-input" accept="image/*" class="sr-only">
+
+              <button type="button" id="btn-qr-demo-scam" class="btn btn-ghost btn-sm">
+                <span>Probar QR de Recibo Falso (Demo)</span>
+              </button>
+
+              <button type="button" id="btn-qr-stop-camera" class="btn btn-ghost btn-sm">
+                <span>Apagar Cámara</span>
+              </button>
+            </div>
+
+            <div id="qr-viewport-box" class="qr-viewport-box">
+              <video id="qr-camera-video" playsinline muted></video>
+              <canvas id="qr-demo-canvas" style="display:none;"></canvas>
+            </div>
+
+            <p id="qr-scan-status" style="margin:0; font-size:0.9rem; color:#9CC4F6;">
+              Listo para inspeccionar cualquier código QR con aislamiento preventivo.
+            </p>
+          </article>
+
+          <!-- 4. SIMULADOR DE ENTRENAMIENTO LIGERO (3 PREGUNTAS CON CASOS REALES) -->
+          <article class="senior-module-card">
+            <div class="senior-card-kicker">
+              <span class="status-led safe" aria-hidden="true"></span>
+              <span>ENTRENAMIENTO PRÁCTICO SIN TEMOR A EQUIVOCARSE</span>
+            </div>
+            <h3 style="margin:0; color:#FFFFFF;">Simulador Ligero: 3 Casos Reales de WhatsApp y SMS</h3>
+            <p id="sim-step-label" style="margin:0; color:#00E1FF; font-weight:700; font-size:0.9rem;">
+              Reto Práctico 1 de 3
+            </p>
+
+            <div class="sim-message-bubble">
+              <div id="sim-sender-label" style="font-size:0.84rem; color:#9CC4F6; margin-bottom:6px; font-weight:600;"></div>
+              <div id="sim-message-text">Cargando ejercicio práctico...</div>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end;">
+              <button type="button" id="sim-btn-speak" class="btn btn-ghost btn-sm">
+                <span>Escuchar este Caso por Voz</span>
+              </button>
+            </div>
+
+            <div class="sim-choice-row">
+              <button type="button" id="sim-btn-scam" class="btn btn-primary" style="background:#DC2626; border-color:#FCA5A5;">
+                <span>Es una Estafa (Bloquear)</span>
+              </button>
+              <button type="button" id="sim-btn-safe" class="btn btn-outline-cyan" style="border-color:#10B981; color:#A7F3D0;">
+                <span>Es un Mensaje Seguro</span>
+              </button>
+            </div>
+
+            <div id="sim-feedback-box" class="sim-feedback-box" aria-live="polite"></div>
+
+            <div>
+              <button type="button" id="sim-btn-next" class="btn btn-outline-cyan btn-sm" style="display:none;">
+                <span>Siguiente Caso Práctico</span>
+              </button>
+            </div>
+          </article>
+
+          <!-- 5. VERIFICADOR DE NÚMEROS Y CUENTAS OFICIALES (DIRECTORIO BLANCO VERIFICADO) -->
+          <article class="senior-module-card full-span">
+            <div class="senior-card-kicker">
+              <span class="status-led safe" aria-hidden="true"></span>
+              <span>DIRECTORIO BLANCO VERIFICADO • SOLO CUENTAS Y TELÉFONOS REALES</span>
+            </div>
+            <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:flex-end; gap:14px;">
+              <div>
+                <h3 style="margin:0; color:#FFFFFF;">Buscador Oficial de Bancos, Organismos Públicos y Empresas de Envío</h3>
+                <p style="margin:4px 0 0; color:#C8DDF8; font-size:0.95rem;">
+                  Escribe el nombre de tu banco o institución para ver únicamente su dirección web legítima y llamar directo a su número oficial verificado.
+                </p>
+              </div>
+
+              <div style="display:flex; flex-wrap:wrap; gap:8px;">
+                <button type="button" class="btn btn-primary btn-sm" data-dir-cat="ALL">Todos</button>
+                <button type="button" class="btn btn-ghost btn-sm" data-dir-cat="BANCO">Bancos</button>
+                <button type="button" class="btn btn-ghost btn-sm" data-dir-cat="ORGANISMO_PUBLICO">Organismos Públicos</button>
+                <button type="button" class="btn btn-ghost btn-sm" data-dir-cat="ENVIOS">Envíos</button>
+              </div>
+            </div>
+
+            <div>
+              <label for="directory-search-input" class="sr-only">Buscar banco, organismo público o empresa de envíos</label>
+              <input
+                type="search"
+                id="directory-search-input"
+                class="form-input"
+                style="font-size:1.05rem; min-height:52px;"
+                placeholder="Escribe aquí: Banesco, Banco de Venezuela, Mercantil, IVSS, Patria, SAIME, Zoom..."
+              >
+            </div>
+
+            <div id="verified-directory-grid" class="directory-results-grid" aria-live="polite"></div>
+          </article>
+
+        </div>
+      </div>
+    </section>
+
+    <div class="section-divider" aria-hidden="true"></div>
+
     <!-- BLOQUE F: PLANES COMERCIALES TRANSPARENTES (FREEMIUM) -->
     <section id="planes" class="section-block">
       <div class="container">
@@ -1395,6 +1724,120 @@
     </div>
   </div>
 
+  <!-- MODAL DE PAUSA ANTI-PÁNICO DE 15 SEGUNDOS (CONTENCIÓN EMOCIONAL) -->
+  <div id="anti-panic-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="anti-panic-title">
+    <div class="modal-card" style="max-width:560px; text-align:center; border:2px solid #00E1FF;">
+      <button type="button" id="anti-panic-close-btn" class="modal-close" aria-label="Cerrar aviso de calma">
+        <svg class="icon-svg" viewBox="0 0 24 24" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+
+      <div id="anti-panic-countdown" class="anti-panic-timer-badge" aria-live="polite">15s</div>
+      <span class="badge badge-critical">Pausa Anti-Pánico Protectora</span>
+      <h3 id="anti-panic-title" style="margin-top:12px; font-size:1.4rem;">
+        Respira con tranquilidad: Tu dinero está seguro si no entregas datos
+      </h3>
+      <p style="color:#C8DDF8; margin-top:8px; font-size:0.98rem;">
+        Detectamos presión psicológica o suplantación urgente. Antes de hacer cualquier clic, recuerda nuestras <strong>3 Reglas de Oro</strong>:
+      </p>
+
+      <ul class="golden-rules-list">
+        <li><strong>1. Ningún banco ni ente público</strong> pide contraseñas, coordenadas ni códigos SMS por WhatsApp.</li>
+        <li><strong>2. Si dicen "Mamá / Papá, cambié de número"</strong>, cuelga y llama tú mismo al número antiguo de tu hijo.</li>
+        <li><strong>3. Ningún bono o pensión real vence en 10 minutos.</strong> La prisa artificial siempre es señal de estafa.</li>
+      </ul>
+
+      <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:10px; margin-top:14px;">
+        <button type="button" id="anti-panic-speak-btn" class="btn btn-outline-cyan btn-sm">
+          <span>Escuchar Reglas en Voz Alta</span>
+        </button>
+        <button type="button" id="anti-panic-continue-btn" class="btn btn-primary">
+          <span>Ya respiré con calma, ver diagnóstico</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DE RESPUESTA DE EMERGENCIA ("¿YA DISTE TU CLAVE O HICISTE UN PAGO?") -->
+  <div id="senior-emergency-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="senior-emergency-title">
+    <div class="modal-card" style="max-width:600px; border:2px solid #FF2E4C;">
+      <button type="button" id="senior-emergency-close" class="modal-close" aria-label="Cerrar ventana de emergencia">
+        <svg class="icon-svg" viewBox="0 0 24 24" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+
+      <span class="badge badge-critical">Protocolo de Contención Inmediata</span>
+      <h3 id="senior-emergency-title" style="margin-top:12px; font-size:1.35rem;">
+        ¿Ya entregaste tu clave bancaria o hiciste un pago? Actúa en 3 pasos:
+      </h3>
+      <p style="color:#DCEBFB; font-size:0.95rem; margin-top:6px;">
+        Mantén la calma y no borres los mensajes de WhatsApp (sirven como prueba oficial). Selecciona tu banco para llamar de inmediato a bloqueo preventivo:
+      </p>
+
+      <form id="senior-emergency-form" style="margin-top:14px; display:grid; gap:12px;">
+        <input type="hidden" id="emergency-scan-id-hidden" value="">
+
+        <div class="form-group" style="margin:0;">
+          <label for="emergency-bank-select" class="form-label">Selecciona tu Banco para Bloqueo Inmediato:</label>
+          <select id="emergency-bank-select" class="form-select" required>
+            <option value="banesco">Banesco Banco Universal (0500-2263726)</option>
+            <option value="banco-de-venezuela">Banco de Venezuela — BDV (0500-6425283)</option>
+            <option value="mercantil">Mercantil Banco (0212-5032522)</option>
+            <option value="provincial">BBVA Provincial (0500-5087432)</option>
+            <option value="bnc">Banco Nacional de Crédito — BNC (0500-2625000)</option>
+            <option value="bancamiga">Bancamiga (0500-8822622)</option>
+          </select>
+        </div>
+
+        <a
+          id="emergency-call-bank-btn"
+          href="tel:05002263726"
+          class="btn btn-primary"
+          style="background:#DC2626; border-color:#FCA5A5; width:100%; justify-content:center; font-size:1.02rem;"
+        >
+          PASO 1: Llamar AHORA a Banesco (0500-2263726)
+        </a>
+
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:10px;">
+          <div class="form-group" style="margin:0;">
+            <label for="emergency-impact-select" class="form-label">¿Qué ocurrió?</label>
+            <select id="emergency-impact-select" class="form-select">
+              <option value="CREDENTIALS_EXPOSED">Entregué mi clave, usuario o código SMS</option>
+              <option value="FINANCIAL_LOSS">Realicé una transferencia o Pago Móvil</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin:0;">
+            <label for="emergency-reporter-phone" class="form-label">Tu teléfono para contacto oficial</label>
+            <input type="tel" id="emergency-reporter-phone" class="form-input" placeholder="Ej: 0414-0000000">
+          </div>
+        </div>
+
+        <div class="form-group" style="margin:0;">
+          <label for="emergency-suspect-input" class="form-label">Teléfono o cuenta del estafador (si lo tienes a mano)</label>
+          <input type="text" id="emergency-suspect-input" class="form-input" placeholder="Ej: +58 412-998-0012 o enlace recibido">
+        </div>
+
+        <button type="submit" id="emergency-submit-cicpc-btn" class="btn btn-outline-cyan" style="width:100%; justify-content:center;">
+          <span>PASO 2: Enviar Expediente Prioritario Urgente al C.I.C.P.C</span>
+        </button>
+
+        <a href="tel:08002427224" class="btn btn-ghost btn-sm" style="justify-content:center;">
+          <span>PASO 3: Línea Directa C.I.C.P.C Delitos Informáticos (0800-2427224)</span>
+        </a>
+      </form>
+
+      <div
+        id="emergency-case-result"
+        style="display:none; margin-top:14px; padding:14px; border-radius:12px; background:rgba(6,78,59,0.85); border:1.5px solid #10B981;"
+        aria-live="polite"
+      ></div>
+    </div>
+  </div>
+
   <!-- BANNER INTELIGENTE FLOTANTE PWA -->
   <div id="pwa-floating-banner" class="pwa-floating-banner" role="region" aria-label="Instalar aplicación móvil">
     <img src="/assets/images/logo-emblem.png" alt="Logo Detector360" class="brand-logo-img" width="40" height="40">
@@ -1411,6 +1854,6 @@
     </button>
   </div>
 
-  <script type="module" src="/js/landing.js?v=2.5"></script>
+  <script type="module" src="/js/landing.js?v=2.6"></script>
 </body>
 </html>
