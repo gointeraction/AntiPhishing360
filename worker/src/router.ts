@@ -67,6 +67,16 @@ export class ApiRouter {
     this.add('GET', '/api/v1/senior/guardian/:token', SeniorController.getGuardianConsultation);
     this.add('POST', '/api/v1/senior/guardian/:token/reply', SeniorController.replyGuardianConsultation);
     this.add('POST', '/api/v1/senior/emergency-report', SeniorController.submitEmergencyReport);
+
+    // Module 6: Dedicated Family Guardian Portal (/familiar) for Continuous Senior Monitoring
+    this.add('POST', '/api/v1/senior/family/register', SeniorController.registerFamilyLink);
+    this.add('POST', '/api/v1/senior/family/login', SeniorController.loginFamilyPortal);
+    this.add('POST', '/api/v1/senior/family/logout', SeniorController.logoutFamilyPortal);
+    this.add('GET', '/api/v1/senior/family/dashboard', SeniorController.getFamilyDashboard);
+    this.add('POST', '/api/v1/senior/family/events', SeniorController.reportSeniorDeviceEvent);
+    this.add('PATCH', '/api/v1/senior/family/events/:event_id', SeniorController.updateFamilyEventDecision);
+    this.add('POST', '/api/v1/senior/family/broadcast', SeniorController.sendFamilyBroadcast);
+    this.add('GET', '/api/v1/senior/family/senior-sync/:family_code', SeniorController.getSeniorLiveSync);
   }
 
   private add(method: string, pathTemplate: string, handler: RouteHandler): void {

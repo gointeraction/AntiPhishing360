@@ -6,6 +6,8 @@ const STORAGE_KEYS = {
   SENIOR_NAME: 'd360_senior_name',
   GUARDIAN_NAME: 'd360_guardian_name',
   GUARDIAN_PHONE: 'd360_guardian_phone',
+  FAMILY_CODE: 'd360_family_code',
+  LAST_BROADCAST_TS: 'd360_last_broadcast_ts',
   GUARDIAN_AUTO_CRITICAL: 'd360_guardian_auto_critical',
   LAST_GUARDIAN_TOKEN: 'd360_last_guardian_token',
 };
@@ -22,6 +24,8 @@ const EMERGENCY_PHONES_BY_SLUG = {
 let externalUrlScanHandler = null;
 let antiPanicInterval = null;
 let guardianPollInterval = null;
+let familySyncPollInterval = null;
+let nextUrlEventType = 'URL_SCAN';
 let activeQrStream = null;
 let qrScanLoopActive = false;
 let simulatorQuestions = [];
@@ -206,8 +210,11 @@ export function buildSeniorAssistActionsBar(report) {
  * - Pausa Anti-Pánico de 15 segundos ante riesgo crítico / urgencia
  * - Alerta Automática al Familiar ("Ángel Guardián") ante riesgo CRITICAL
  */
-export async function handlePostVerdictSeniorProtections(report) {
+export async function handlePostVerdictSeniorProtections(report, explicitEventType = '') {
   if (!report) return;
+
+  const resolvedEventType = explicitEventType || nextUrlEventType || 'URL_SCAN';
+  nextUrlEventType = 'URL_SCAN';
 
   renderSeniorSemaphore(report);
 
@@ -219,8 +226,33 @@ export async function handlePostVerdictSeniorProtections(report) {
     triggerAntiPanicPause();
   }
 
-  if (report.risk_level === 'CRITICAL') {
+  const cfg = getGuardianConfig();
+  if (report.risk_level === 'CRITICAL' && cfg.guardianName && cfg.autoCritical) {
     await triggerGuardianAutoAlertIfConfigured(report);
+  } else if (cfg.familyCode) {
+    await syncSeniorEventToFamilyFeed(report, resolvedEventType);
+  }
+}
+
+async function syncSeniorEventToFamilyFeed(report, eventType = 'URL_SCAN') {
+  const cfg = getGuardianConfig();
+  if (!cfg.familyCode) return;
+
+  try {
+    await ApiClient.reportSeniorDeviceEvent({
+      family_code: cfg.familyCode,
+      scan_id: report.scan_id || null,
+      event_type: eventType,
+      target_url: report.target_url || report.primary_url || '',
+      content_summary:
+        report.citizen_verdict?.title ||
+        report.citizen_verdict?.summary ||
+        'Revisión preventiva realizada en Detector360',
+      risk_score: typeof report.risk_score === 'number' ? report.risk_score : 0,
+      risk_level: report.risk_level || 'SAFE',
+    });
+  } catch {
+    // Continuar silenciosamente si el código no existe aún o hay límite de tasa
   }
 }
 
@@ -265,6 +297,7 @@ function getGuardianConfig() {
       seniorName: localStorage.getItem(STORAGE_KEYS.SENIOR_NAME) || 'Mamá / Papá',
       guardianName: localStorage.getItem(STORAGE_KEYS.GUARDIAN_NAME) || '',
       guardianPhone: localStorage.getItem(STORAGE_KEYS.GUARDIAN_PHONE) || '',
+      familyCode: (localStorage.getItem(STORAGE_KEYS.FAMILY_CODE) || '').trim().toUpperCase(),
       autoCritical: localStorage.getItem(STORAGE_KEYS.GUARDIAN_AUTO_CRITICAL) !== '0',
     };
   } catch {
@@ -272,6 +305,7 @@ function getGuardianConfig() {
       seniorName: 'Mamá / Papá',
       guardianName: '',
       guardianPhone: '',
+      familyCode: '',
       autoCritical: true,
     };
   }
@@ -284,6 +318,7 @@ export async function triggerGuardianAutoAlertIfConfigured(report) {
   try {
     const res = await ApiClient.createGuardianAlert({
       scan_id: report.scan_id,
+      family_code: cfg.familyCode || undefined,
       senior_name: cfg.seniorName,
       guardian_name: cfg.guardianName,
       guardian_phone: cfg.guardianPhone,
@@ -298,7 +333,7 @@ export async function triggerGuardianAutoAlertIfConfigured(report) {
     saveLastGuardianToken(data.consultation.token);
     renderGuardianStatusBanner(data.consultation, data.review_url, data.whatsapp_share_url, true);
     startGuardianPolling(data.consultation.token);
-    showToast(`Alerta Crítica preparada para tu Ángel Guardián (${cfg.guardianName}).`);
+    showToast(`Alerta Crítica sincronizada con tu Ángel Guardián (${cfg.guardianName}).`);
   } catch {
     // Continuar silenciosamente si hay límite de tasa
   }
@@ -311,6 +346,7 @@ export async function askGuardianOneTap(payload) {
   try {
     const res = await ApiClient.createGuardianAlert({
       scan_id: payload.scan_id || null,
+      family_code: cfg.familyCode || undefined,
       senior_name: cfg.seniorName,
       guardian_name: guardianName,
       guardian_phone: cfg.guardianPhone,
@@ -603,14 +639,40 @@ function initGuardianNetworkSection() {
   const seniorInput = document.getElementById('guardian-senior-name');
   const nameInput = document.getElementById('guardian-family-name');
   const phoneInput = document.getElementById('guardian-family-phone');
+  const codeInput = document.getElementById('guardian-family-code');
   const autoChk = document.getElementById('guardian-auto-critical-chk');
   const askNowBtn = document.getElementById('btn-ask-guardian-direct');
+
+  // Detectar enlace de vinculación en 1 toque enviado desde /familiar (/?vincular=FAM-...)
+  let pairedFromUrl = '';
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const vincularParam = (params.get('vincular') || '').trim().toUpperCase();
+    if (/^[A-Z0-9-]{6,28}$/.test(vincularParam)) {
+      pairedFromUrl = vincularParam;
+      localStorage.setItem(STORAGE_KEYS.FAMILY_CODE, vincularParam);
+      localStorage.setItem(STORAGE_KEYS.SENIOR_MODE, '1');
+      localStorage.setItem(STORAGE_KEYS.AUTO_VOICE, '1');
+      document.documentElement.classList.add('senior-mode');
+    }
+  } catch {
+    // ignore
+  }
 
   const cfg = getGuardianConfig();
   if (seniorInput && cfg.seniorName) seniorInput.value = cfg.seniorName;
   if (nameInput && cfg.guardianName) nameInput.value = cfg.guardianName;
   if (phoneInput && cfg.guardianPhone) phoneInput.value = cfg.guardianPhone;
+  if (codeInput && cfg.familyCode) codeInput.value = cfg.familyCode;
   if (autoChk) autoChk.checked = cfg.autoCritical;
+
+  if (pairedFromUrl) {
+    syncFromFamilyPortalCode(pairedFromUrl, true);
+    startFamilyPortalLiveSync(pairedFromUrl);
+  } else if (cfg.familyCode) {
+    syncFromFamilyPortalCode(cfg.familyCode, false);
+    startFamilyPortalLiveSync(cfg.familyCode);
+  }
 
   try {
     const lastToken = localStorage.getItem(STORAGE_KEYS.LAST_GUARDIAN_TOKEN);
@@ -622,23 +684,31 @@ function initGuardianNetworkSection() {
   }
 
   if (form) {
-    form.addEventListener('submit', (e) => {
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const sName = seniorInput?.value.trim() || 'Mamá / Papá';
       const gName = nameInput?.value.trim() || 'Familiar de Confianza';
       const gPhone = phoneInput?.value.trim() || '';
+      const fCode = (codeInput?.value || '').trim().toUpperCase();
       const autoCrit = autoChk ? autoChk.checked : true;
 
       try {
         localStorage.setItem(STORAGE_KEYS.SENIOR_NAME, sName);
         localStorage.setItem(STORAGE_KEYS.GUARDIAN_NAME, gName);
         localStorage.setItem(STORAGE_KEYS.GUARDIAN_PHONE, gPhone);
+        localStorage.setItem(STORAGE_KEYS.FAMILY_CODE, fCode);
         localStorage.setItem(STORAGE_KEYS.GUARDIAN_AUTO_CRITICAL, autoCrit ? '1' : '0');
       } catch {
         // ignore
       }
 
-      showToast(`Ángel Guardián guardado: ${gName}.`);
+      if (fCode) {
+        await syncFromFamilyPortalCode(fCode, false);
+        startFamilyPortalLiveSync(fCode);
+        showToast(`Ángel Guardián guardado y sincronizado con el código ${fCode}.`);
+      } else {
+        showToast(`Ángel Guardián guardado: ${gName}.`);
+      }
     });
   }
 
@@ -654,6 +724,103 @@ function initGuardianNetworkSection() {
         alert_mode: 'ASK_GUARDIAN',
       });
     });
+  }
+}
+
+function startFamilyPortalLiveSync(familyCode) {
+  if (familySyncPollInterval) {
+    clearInterval(familySyncPollInterval);
+    familySyncPollInterval = null;
+  }
+  if (!familyCode) return;
+
+  familySyncPollInterval = setInterval(() => {
+    if (document.visibilityState === 'visible') {
+      syncFromFamilyPortalCode(familyCode, false);
+    }
+  }, 15000);
+}
+
+async function syncFromFamilyPortalCode(familyCode, announcePairing = false) {
+  if (!familyCode) return;
+  try {
+    const res = await ApiClient.getSeniorLiveSync(familyCode);
+    const data = res.data;
+    if (!data) return;
+
+    const seniorInput = document.getElementById('guardian-senior-name');
+    const nameInput = document.getElementById('guardian-family-name');
+    const codeInput = document.getElementById('guardian-family-code');
+
+    try {
+      if (data.senior_name) localStorage.setItem(STORAGE_KEYS.SENIOR_NAME, data.senior_name);
+      if (data.guardian_name) localStorage.setItem(STORAGE_KEYS.GUARDIAN_NAME, data.guardian_name);
+      localStorage.setItem(STORAGE_KEYS.FAMILY_CODE, data.family_code);
+    } catch {
+      // ignore
+    }
+
+    if (seniorInput && data.senior_name) seniorInput.value = data.senior_name;
+    if (nameInput && data.guardian_name) nameInput.value = data.guardian_name;
+    if (codeInput && data.family_code) codeInput.value = data.family_code;
+
+    if (announcePairing) {
+      showToast(
+        `Teléfono vinculado con tu Ángel Guardián ${data.guardian_name} (${data.family_code}).`
+      );
+      const sectionEl = document.getElementById('guardian-card-anchor');
+      if (sectionEl) sectionEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    if (data.latest_family_broadcast) {
+      renderSeniorFamilyBroadcastBanner(data);
+    }
+  } catch {
+    // Si el código aún no está registrado en /familiar, ignorar silenciosamente
+  }
+}
+
+function renderSeniorFamilyBroadcastBanner(syncData) {
+  const box = document.getElementById('senior-family-broadcast-banner');
+  if (!box || !syncData.latest_family_broadcast) return;
+
+  box.className = 'guardian-live-status visible decision-SAFE_APPROVED';
+  box.textContent = '';
+
+  const title = document.createElement('strong');
+  title.style.display = 'block';
+  title.style.fontSize = '1.05rem';
+  title.style.color = '#6EE7B7';
+  title.textContent = `Mensaje en vivo de ${syncData.guardian_name} (${syncData.family_code}):`;
+
+  const msg = document.createElement('p');
+  msg.style.margin = '6px 0 10px';
+  msg.style.color = '#FFFFFF';
+  msg.style.fontSize = '1rem';
+  msg.textContent = syncData.latest_family_broadcast;
+
+  const listenBtn = document.createElement('button');
+  listenBtn.type = 'button';
+  listenBtn.className = 'btn btn-sm btn-voice-speak';
+  listenBtn.textContent = 'Escuchar Mensaje de mi Familiar';
+  listenBtn.addEventListener('click', () => {
+    speakTextAloud(`Mensaje de ${syncData.guardian_name}: ${syncData.latest_family_broadcast}`);
+  });
+
+  box.append(title, msg, listenBtn);
+
+  try {
+    const prevTs = localStorage.getItem(STORAGE_KEYS.LAST_BROADCAST_TS) || '';
+    if (syncData.broadcast_updated_at && syncData.broadcast_updated_at !== prevTs) {
+      localStorage.setItem(STORAGE_KEYS.LAST_BROADCAST_TS, syncData.broadcast_updated_at);
+      if (isAutoVoiceEnabled()) {
+        speakTextAloud(
+          `Atención. Tienes un mensaje nuevo de ${syncData.guardian_name}: ${syncData.latest_family_broadcast}`
+        );
+      }
+    }
+  } catch {
+    // ignore
   }
 }
 
@@ -831,7 +998,7 @@ async function runDemoWhatsappScreenshotAnalysis() {
   await executeSeniorMessageAnalysis(demoTranscript);
 }
 
-export async function executeSeniorMessageAnalysis(messageText) {
+export async function executeSeniorMessageAnalysis(messageText, overrideEventType = 'MESSAGE_SCAN') {
   const trimmed = (messageText || '').trim();
   const resultBox = document.getElementById('senior-message-verdict-box');
   const submitBtn = document.getElementById('btn-analyze-senior-msg');
@@ -848,7 +1015,7 @@ export async function executeSeniorMessageAnalysis(messageText) {
     const report = res.data;
 
     renderSeniorMessageVerdict(report, resultBox);
-    await handlePostVerdictSeniorProtections(report);
+    await handlePostVerdictSeniorProtections(report, overrideEventType);
   } catch (err) {
     showToast(err.message || 'No se pudo analizar el mensaje.', true);
   } finally {
@@ -1083,10 +1250,11 @@ async function inspectDecodedQrPayload(rawPayload) {
     }
     showToast('Código QR interceptado de forma segura. Ejecutando Rayos X antes de abrirlo...');
     if (externalUrlScanHandler) {
+      nextUrlEventType = 'QR_SCAN';
       externalUrlScanHandler(trimmed);
     }
   } else {
-    await executeSeniorMessageAnalysis(`Contenido leído en Código QR: ${trimmed}`);
+    await executeSeniorMessageAnalysis(`Contenido leído en Código QR: ${trimmed}`, 'QR_SCAN');
   }
 }
 
@@ -1229,8 +1397,10 @@ function initEmergencyModalAndButtons() {
 
       try {
         const scanIdField = document.getElementById('emergency-scan-id-hidden');
+        const cfg = getGuardianConfig();
         const payload = {
           scan_id: scanIdField?.value || '',
+          family_code: cfg.familyCode || undefined,
           bank_slug: bankSelect?.value || 'banesco',
           incident_impact:
             document.getElementById('emergency-impact-select')?.value || 'CREDENTIALS_EXPOSED',

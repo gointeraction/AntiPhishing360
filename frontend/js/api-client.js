@@ -211,6 +211,60 @@ export class ApiClient {
       body: JSON.stringify(payload),
     });
   }
+
+  // --------------------------------------------------------------------------
+  // Portal Dedicado del Familiar (/familiar): Novedades de la Persona Mayor
+  // --------------------------------------------------------------------------
+  static registerFamilyLink(payload) {
+    return this.request('/senior/family/register', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  }
+
+  static loginFamilyPortal(familyCode, accessKey) {
+    return this.request('/senior/family/login', {
+      method: 'POST',
+      body: JSON.stringify({ family_code: familyCode, access_key: accessKey }),
+    });
+  }
+
+  static logoutFamilyPortal() {
+    return this.request('/senior/family/logout', { method: 'POST' });
+  }
+
+  static getFamilyDashboard(filter = 'ALL') {
+    const qs = new URLSearchParams();
+    if (filter && filter !== 'ALL') qs.set('filter', filter);
+    return this.request(`/senior/family/dashboard?${qs.toString()}`, { method: 'GET' });
+  }
+
+  static reportSeniorDeviceEvent(payload) {
+    return this.request('/senior/family/events', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  }
+
+  static updateFamilyEventDecision(eventId, status, note = '') {
+    return this.request(`/senior/family/events/${encodeURIComponent(eventId)}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status, note }),
+    });
+  }
+
+  static sendFamilyBroadcast(message) {
+    return this.request('/senior/family/broadcast', {
+      method: 'POST',
+      body: JSON.stringify({ message }),
+    });
+  }
+
+  static getSeniorLiveSync(familyCode) {
+    return this.request(`/senior/family/senior-sync/${encodeURIComponent(familyCode)}`, {
+      method: 'GET',
+    });
+  }
 }
 
 export function showToast(message, isError = false) {

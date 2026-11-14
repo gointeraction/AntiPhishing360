@@ -22,6 +22,8 @@ async function runVerification() {
     // 1. Verificar vistas estáticas y rutas limpias de Cloudflare Pages + CSP headers
     for (const route of [
       '/',
+      '/familiar',
+      '/guardian',
       '/login',
       '/register',
       '/dashboard',
@@ -219,13 +221,15 @@ async function runVerification() {
       const code = fs.readFileSync(path.join(jsDir, file), 'utf-8');
       assert.ok(!code.includes('.innerHTML'), `El archivo ${file} no debe usar innerHTML`);
     }
-    console.log('✅ 10. Todo el JavaScript Frontend (8 módulos) 100% libre de innerHTML (inmune a XSS).');
+    console.log('✅ 10. Todo el JavaScript Frontend (12 módulos) 100% libre de innerHTML (inmune a XSS).');
 
     // 11. Auditoría UI/UX Pro Max: Cero emojis en vistas HTML, Navbar Flotante, Bento Grid y prefers-reduced-motion
     const frontendDir = path.join(__dirname, '..', 'frontend');
     const emojiRegex = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/u;
     for (const htmlFile of [
       'index.html',
+      'familiar.html',
+      'guardian.html',
       'login.html',
       'register.html',
       'dashboard.html',
@@ -653,6 +657,158 @@ async function runVerification() {
     assert.equal(emergBody.data.priority, 'URGENT');
     assert.equal(emergBody.data.emergency_phone, '0500-6425283');
     console.log('✅ 16. Suite Integral Adulto Mayor (Letra Grande, Voz, Ángel Guardián, Mensajes/OCR, QR, Directorio Blanco, Anti-Pánico, Emergencia y Simulador) verificada.');
+
+    // 17. Verificar Portal Dedicado del Familiar del Adulto Mayor (/familiar + /api/v1/senior/family/*)
+    // 17a. Aislamiento de sesión: un ciudadano normal o visitante sin sesión familiar debe recibir 401
+    const unauthFamRes = await dispatch('/api/v1/senior/family/dashboard', {
+      headers: { Cookie: cookieHeader },
+    });
+    assert.equal(unauthFamRes.status, 401, 'El dashboard familiar debe exigir sesión dedicada de /familiar');
+
+    // 17b. Credenciales erróneas rechazadas (401) y login exitoso con vínculo semilla FAM-ABUELO-2026
+    const badFamLogin = await dispatch('/api/v1/senior/family/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        family_code: 'FAM-ABUELO-2026',
+        access_key: 'ClaveIncorrecta999',
+      }),
+    });
+    assert.equal(badFamLogin.status, 401);
+
+    const okFamLogin = await dispatch('/api/v1/senior/family/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        family_code: 'FAM-ABUELO-2026',
+        access_key: 'ClaveFamiliar2026!',
+      }),
+    });
+    assert.equal(okFamLogin.status, 200);
+    const famSetCookies = okFamLogin.headers.getSetCookie();
+    assert.ok(famSetCookies.some((c) => c.startsWith('__Host-d360_family_session=')));
+    const famCookieHeader = famSetCookies.map((c) => c.split(';')[0]).join('; ');
+
+    // 17c. El teléfono del abuelo reporta una novedad de QR y una consulta 1-toque vinculada al código familiar
+    const qrSyncRes = await dispatch('/api/v1/senior/family/events', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        family_code: 'FAM-ABUELO-2026',
+        event_type: 'QR_SCAN',
+        target_url: 'http://recibo-luz-premio.ejemplo.xyz',
+        content_summary: 'Código QR sospechoso interceptado en recibo impreso',
+        risk_score: 91,
+        risk_level: 'CRITICAL',
+      }),
+    });
+    assert.equal(qrSyncRes.status, 201);
+
+    const linkedConsultRes = await dispatch('/api/v1/senior/guardian/ask', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        family_code: 'FAM-ABUELO-2026',
+        senior_name: 'Abuelo José Gregorio',
+        guardian_name: 'Hija Elena Rojas',
+        guardian_phone: '+58 412-5550199',
+        alert_mode: 'ASK_GUARDIAN',
+        target_url: 'http://bono-adulto-mayor-verifica.xyz',
+        message_excerpt: 'Hija, me llegó este enlace de pensión, ¿lo abro?',
+        risk_score: 88,
+        risk_level: 'CRITICAL',
+      }),
+    });
+    assert.equal(linkedConsultRes.status, 201);
+    const linkedConsultBody = (await linkedConsultRes.json()) as {
+      data: { consultation: { token: string } };
+    };
+
+    // 17d. Consultar bitácora completa en /api/v1/senior/family/dashboard y responder una novedad desde el portal
+    const famDashRes = await dispatch('/api/v1/senior/family/dashboard', {
+      headers: { Cookie: famCookieHeader },
+    });
+    assert.equal(famDashRes.status, 200);
+    const famDashBody = (await famDashRes.json()) as {
+      data: {
+        family_profile: { family_code: string; senior_name: string; guardian_name: string };
+        kpis: {
+          total_events: number;
+          pending_consultations: number;
+          critical_threats_blocked: number;
+        };
+        events: Array<{ id: string; consultation_token: string | null; family_status: string }>;
+      };
+    };
+    assert.equal(famDashBody.data.family_profile.family_code, 'FAM-ABUELO-2026');
+    assert.ok(famDashBody.data.kpis.total_events >= 6);
+    assert.ok(famDashBody.data.kpis.critical_threats_blocked >= 3);
+
+    const targetEvent = famDashBody.data.events.find(
+      (ev) => ev.consultation_token === linkedConsultBody.data.consultation.token
+    );
+    assert.ok(targetEvent, 'La consulta 1-toque del abuelo debe aparecer en la bitácora del familiar');
+
+    const patchDecisionRes = await dispatch(`/api/v1/senior/family/events/${targetEvent.id}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Cookie: famCookieHeader,
+      },
+      body: JSON.stringify({
+        status: 'DANGER_DELETE',
+        note: 'Papá, soy Elena: no abras ese enlace, bórralo ya mismo.',
+      }),
+    });
+    assert.equal(patchDecisionRes.status, 200);
+
+    // Verificar que la decisión tomada en /familiar también actualizó la consulta 1-toque en el teléfono del abuelo
+    const syncedConsultRes = await dispatch(
+      `/api/v1/senior/guardian/${linkedConsultBody.data.consultation.token}`
+    );
+    const syncedConsultBody = (await syncedConsultRes.json()) as {
+      data: { consultation: { guardian_decision: string; guardian_note: string } };
+    };
+    assert.equal(syncedConsultBody.data.consultation.guardian_decision, 'DANGER_DELETE');
+
+    // 17e. Envío de mensaje directo tranquilizador desde /familiar -> recibido por el teléfono del abuelo
+    const broadcastText = 'Papá tranquilo, acabo de revisar tus novedades y tu cuenta está segura.';
+    const broadcastRes = await dispatch('/api/v1/senior/family/broadcast', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Cookie: famCookieHeader,
+      },
+      body: JSON.stringify({ message: broadcastText }),
+    });
+    assert.equal(broadcastRes.status, 200);
+
+    const seniorSyncRes = await dispatch('/api/v1/senior/family/senior-sync/FAM-ABUELO-2026');
+    assert.equal(seniorSyncRes.status, 200);
+    const seniorSyncBody = (await seniorSyncRes.json()) as {
+      data: { latest_family_broadcast: string; guardian_name: string };
+    };
+    assert.equal(seniorSyncBody.data.latest_family_broadcast, broadcastText);
+
+    // 17f. Creación de un nuevo vínculo familiar personalizado desde /familiar
+    const regFamRes = await dispatch('/api/v1/senior/family/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        senior_name: 'Abuela Rosaura',
+        senior_phone: '+58 414-9001122',
+        guardian_name: 'Nieto Andrés',
+        guardian_phone: '+58 424-8003344',
+        access_key: 'EscudoRosaura2026!',
+      }),
+    });
+    assert.equal(regFamRes.status, 201);
+    const regFamBody = (await regFamRes.json()) as {
+      data: { family_code: string; pairing_url: string };
+    };
+    assert.ok(regFamBody.data.family_code.startsWith('FAM-'));
+    assert.ok(regFamBody.data.pairing_url.includes('?vincular=FAM-'));
+    console.log('✅ 17. Portal de Acceso del Familiar (/familiar: login aislado, bitácora en vivo, respuesta 1-toque, mensaje directo y vinculación) verificado.');
 
     console.log('\n🎉 TODAS LAS PRUEBAS DE ARQUITECTURA, SEGURIDAD Y PRODUCTO PASARON EXITOSAMENTE.');
   } finally {

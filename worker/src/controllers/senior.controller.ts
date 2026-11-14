@@ -1,11 +1,57 @@
-import type { CicpcIncidentImpact, RequestContext, RiskLevel, ScanReportDTO } from '../types.ts';
+import type { CicpcIncidentImpact, Env, RequestContext, RiskLevel, ScanReportDTO } from '../types.ts';
 import { jsonResponse } from '../middlewares/security.middleware.ts';
+import { getJwtSecret, parseCookies } from '../middlewares/auth.middleware.ts';
 import { RateLimitMiddleware } from '../middlewares/rateLimit.middleware.ts';
 import { CryptoService } from '../services/crypto.service.ts';
 import { SeniorProtectionService } from '../services/senior-protection.service.ts';
-import { SeniorRepository } from '../repositories/senior.repository.ts';
+import {
+  type GuardianEventType,
+  SeniorRepository,
+} from '../repositories/senior.repository.ts';
 import { ScanRepository } from '../repositories/scan.repository.ts';
 import { CicpcRepository } from '../repositories/cicpc.repository.ts';
+
+function getFamilyJwtSecret(env: Env): string {
+  return `${getJwtSecret(env)}::FAMILY_GUARDIAN_PORTAL_V1`;
+}
+
+function buildFamilySessionCookie(request: Request, token: string): string[] {
+  const isHttps = new URL(request.url).protocol === 'https:';
+  const name = isHttps ? '__Host-d360_family_session' : 'd360_family_session';
+  const sec = isHttps ? '; Secure' : '';
+  return [`${name}=${encodeURIComponent(token)}; HttpOnly${sec}; SameSite=Strict; Path=/; Max-Age=43200`];
+}
+
+function buildClearFamilySessionCookie(request: Request): string[] {
+  const isHttps = new URL(request.url).protocol === 'https:';
+  const name = isHttps ? '__Host-d360_family_session' : 'd360_family_session';
+  const sec = isHttps ? '; Secure' : '';
+  return [`${name}=; HttpOnly${sec}; SameSite=Strict; Path=/; Max-Age=0`];
+}
+
+async function resolveFamilySession(
+  request: Request,
+  env: Env
+): Promise<{ family_code: string; guardian_name: string } | null> {
+  const cookies = parseCookies(request.headers.get('Cookie'));
+  const token = cookies['__Host-d360_family_session'] || cookies['d360_family_session'] || '';
+  if (!token) return null;
+
+  const payload = await CryptoService.verifyJwt<{
+    sub: string;
+    family_code: string;
+    guardian_name: string;
+    scope: string;
+  }>(token, getFamilyJwtSecret(env));
+
+  if (!payload || payload.scope !== 'FAMILY_GUARDIAN' || !payload.family_code) {
+    return null;
+  }
+  return {
+    family_code: payload.family_code,
+    guardian_name: payload.guardian_name,
+  };
+}
 
 export class SeniorController {
   /**
@@ -207,6 +253,7 @@ export class SeniorController {
       typeof body.message_excerpt === 'string' ? body.message_excerpt.trim() : '';
     const alertMode =
       body.alert_mode === 'AUTO_CRITICAL_ALERT' ? 'AUTO_CRITICAL_ALERT' : 'ASK_GUARDIAN';
+    const familyCode = typeof body.family_code === 'string' ? body.family_code.trim() : '';
     const riskScore = typeof body.risk_score === 'number' ? body.risk_score : 75;
     const rawLevel = typeof body.risk_level === 'string' ? body.risk_level : 'WARNING';
     const riskLevel: RiskLevel =
@@ -237,6 +284,23 @@ export class SeniorController {
       riskScore,
       riskLevel,
     });
+
+    if (familyCode) {
+      await repo
+        .recordFamilyActivityEvent({
+          familyCode,
+          consultationToken: consultation.token,
+          scanId,
+          eventType: alertMode,
+          targetUrl,
+          contentSummary:
+            messageExcerpt || `Solicitud de apoyo familiar (${alertMode}) sobre ${targetUrl}`,
+          riskScore,
+          riskLevel,
+          familyStatus: 'PENDING',
+        })
+        .catch(() => {});
+    }
 
     const origin = new URL(rc.request.url).origin;
     const reviewUrl = `${origin}/guardian?token=${encodeURIComponent(consultation.token)}`;
@@ -480,6 +544,22 @@ export class SeniorController {
       reporterContact,
     });
 
+    const familyCode = typeof body.family_code === 'string' ? body.family_code.trim() : '';
+    if (familyCode) {
+      await seniorRepo
+        .recordFamilyActivityEvent({
+          familyCode,
+          scanId: finalScanId,
+          eventType: 'EMERGENCY_TRIGGERED',
+          targetUrl,
+          contentSummary: `EMERGENCIA ACTIVADA (${bankName}): El adulto mayor reportó exposición de clave o pago (${cicpcCase.case_number}). ¡Llamar de inmediato!`,
+          riskScore: 98,
+          riskLevel: 'CRITICAL',
+          familyStatus: 'PENDING',
+        })
+        .catch(() => {});
+    }
+
     return jsonResponse(
       {
         success: true,
@@ -495,5 +575,520 @@ export class SeniorController {
       },
       201
     );
+  }
+
+  // ==========================================================================
+  // PORTAL DEDICADO DEL FAMILIAR (/familiar): ACCESO Y MONITOREO DEL ABUELO
+  // ==========================================================================
+
+  /**
+   * POST /api/v1/senior/family/register
+   * Crea un nuevo Código de Vínculo Familiar y autentica al familiar
+   */
+  static async registerFamilyLink(rc: RequestContext): Promise<Response> {
+    const rl = await RateLimitMiddleware.enforce({
+      kv: rc.env.KV_CACHE,
+      bucketName: 'family_reg',
+      identifier: `ip:${rc.clientIp}`,
+      maxRequests: 10,
+      windowSeconds: 60,
+      friendlyMessage: 'Espera unos segundos antes de registrar otro vínculo familiar.',
+    });
+    if (rl) return rl;
+
+    let body: Record<string, unknown>;
+    try {
+      body = (await rc.request.json()) as Record<string, unknown>;
+    } catch {
+      return jsonResponse(
+        { success: false, error: { code: 'INVALID_JSON', message: 'Datos inválidos.' } },
+        400
+      );
+    }
+
+    const seniorName = typeof body.senior_name === 'string' ? body.senior_name.trim() : '';
+    const seniorPhone = typeof body.senior_phone === 'string' ? body.senior_phone.trim() : '';
+    const guardianName = typeof body.guardian_name === 'string' ? body.guardian_name.trim() : '';
+    const guardianPhone = typeof body.guardian_phone === 'string' ? body.guardian_phone.trim() : '';
+    const accessKey = typeof body.access_key === 'string' ? body.access_key.trim() : '';
+
+    if (seniorName.length < 2 || guardianName.length < 2) {
+      return jsonResponse(
+        {
+          success: false,
+          error: {
+            code: 'MISSING_NAMES',
+            message: 'Indica el nombre de la persona mayor y el nombre del familiar responsable.',
+          },
+        },
+        400
+      );
+    }
+
+    if (accessKey.length < 4) {
+      return jsonResponse(
+        {
+          success: false,
+          error: {
+            code: 'WEAK_ACCESS_KEY',
+            message: 'Define una clave o PIN familiar de al menos 4 caracteres.',
+          },
+        },
+        400
+      );
+    }
+
+    const pinHash = await CryptoService.hashPassword(accessKey);
+    const repo = new SeniorRepository(rc.env.DB);
+    const link = await repo.createFamilyLink({
+      seniorName,
+      seniorPhone,
+      guardianName,
+      guardianPhone,
+      pinHash,
+    });
+
+    await repo.recordFamilyActivityEvent({
+      familyCode: link.family_code,
+      eventType: 'URL_SCAN',
+      targetUrl: 'https://detector360.app',
+      contentSummary: `Vínculo familiar creado exitosamente por ${link.guardian_name} para cuidar a ${link.senior_name}.`,
+      riskScore: 0,
+      riskLevel: 'SAFE',
+      familyStatus: 'INFO',
+    });
+
+    const jwt = await CryptoService.signJwt(
+      {
+        sub: link.id,
+        family_code: link.family_code,
+        guardian_name: link.guardian_name,
+        scope: 'FAMILY_GUARDIAN',
+      },
+      getFamilyJwtSecret(rc.env),
+      43200
+    );
+
+    const origin = new URL(rc.request.url).origin;
+    const pairingUrl = `${origin}/?vincular=${encodeURIComponent(link.family_code)}`;
+
+    return jsonResponse(
+      {
+        success: true,
+        message: 'Vínculo familiar creado. Comparte el enlace de activación con el teléfono de tu familiar mayor.',
+        data: {
+          family_code: link.family_code,
+          senior_name: link.senior_name,
+          guardian_name: link.guardian_name,
+          pairing_url: pairingUrl,
+        },
+      },
+      201,
+      { 'Set-Cookie': buildFamilySessionCookie(rc.request, jwt) }
+    );
+  }
+
+  /**
+   * POST /api/v1/senior/family/login
+   * Autenticación del familiar con Código Familiar + Clave/PIN
+   */
+  static async loginFamilyPortal(rc: RequestContext): Promise<Response> {
+    const rl = await RateLimitMiddleware.enforce({
+      kv: rc.env.KV_CACHE,
+      bucketName: 'family_login',
+      identifier: `ip:${rc.clientIp}`,
+      maxRequests: 12,
+      windowSeconds: 60,
+      friendlyMessage: 'Demasiados intentos seguidos. Espera un minuto.',
+    });
+    if (rl) return rl;
+
+    let body: Record<string, unknown>;
+    try {
+      body = (await rc.request.json()) as Record<string, unknown>;
+    } catch {
+      return jsonResponse(
+        { success: false, error: { code: 'INVALID_JSON', message: 'Solicitud inválida.' } },
+        400
+      );
+    }
+
+    const familyCode =
+      typeof body.family_code === 'string' ? body.family_code.trim().toUpperCase() : '';
+    const accessKey = typeof body.access_key === 'string' ? body.access_key.trim() : '';
+
+    if (!familyCode || !accessKey) {
+      return jsonResponse(
+        {
+          success: false,
+          error: {
+            code: 'MISSING_CREDENTIALS',
+            message: 'Ingresa el Código de Vínculo Familiar y tu Clave de Acceso.',
+          },
+        },
+        400
+      );
+    }
+
+    const repo = new SeniorRepository(rc.env.DB);
+    const link = await repo.getFamilyLinkByCode(familyCode);
+    if (!link) {
+      return jsonResponse(
+        {
+          success: false,
+          error: {
+            code: 'INVALID_CREDENTIALS',
+            message: 'Código familiar o clave incorrectos.',
+          },
+        },
+        401
+      );
+    }
+
+    const valid = await CryptoService.verifyPassword(accessKey, link.pin_hash);
+    if (!valid) {
+      return jsonResponse(
+        {
+          success: false,
+          error: {
+            code: 'INVALID_CREDENTIALS',
+            message: 'Código familiar o clave incorrectos.',
+          },
+        },
+        401
+      );
+    }
+
+    const jwt = await CryptoService.signJwt(
+      {
+        sub: link.id,
+        family_code: link.family_code,
+        guardian_name: link.guardian_name,
+        scope: 'FAMILY_GUARDIAN',
+      },
+      getFamilyJwtSecret(rc.env),
+      43200
+    );
+
+    return jsonResponse(
+      {
+        success: true,
+        data: {
+          family_code: link.family_code,
+          senior_name: link.senior_name,
+          guardian_name: link.guardian_name,
+        },
+      },
+      200,
+      { 'Set-Cookie': buildFamilySessionCookie(rc.request, jwt) }
+    );
+  }
+
+  /**
+   * POST /api/v1/senior/family/logout
+   */
+  static async logoutFamilyPortal(rc: RequestContext): Promise<Response> {
+    return jsonResponse(
+      { success: true, message: 'Sesión familiar cerrada correctamente.' },
+      200,
+      { 'Set-Cookie': buildClearFamilySessionCookie(rc.request) }
+    );
+  }
+
+  /**
+   * GET /api/v1/senior/family/dashboard
+   * Sala de monitoreo en tiempo real de cualquier novedad con la persona mayor
+   */
+  static async getFamilyDashboard(rc: RequestContext): Promise<Response> {
+    const session = await resolveFamilySession(rc.request, rc.env);
+    if (!session) {
+      return jsonResponse(
+        {
+          success: false,
+          error: {
+            code: 'FAMILY_UNAUTHORIZED',
+            message: 'Ingresa con tu Código de Vínculo Familiar y Clave de Acceso.',
+          },
+        },
+        401
+      );
+    }
+
+    const repo = new SeniorRepository(rc.env.DB);
+    const link = await repo.getFamilyLinkByCode(session.family_code);
+    if (!link) {
+      return jsonResponse(
+        { success: false, error: { code: 'LINK_NOT_FOUND', message: 'Vínculo no encontrado.' } },
+        404
+      );
+    }
+
+    const url = new URL(rc.request.url);
+    const filter = url.searchParams.get('filter') || 'ALL';
+    const [allEvents, filteredEvents] = await Promise.all([
+      repo.listFamilyActivityFeed({ familyCode: link.family_code, filter: 'ALL', limit: 100 }),
+      repo.listFamilyActivityFeed({ familyCode: link.family_code, filter, limit: 80 }),
+    ]);
+
+    const pendingCount = allEvents.filter((e) => e.family_status === 'PENDING').length;
+    const criticalBlocked = allEvents.filter((e) => e.risk_level === 'CRITICAL').length;
+    const activeEmergency = allEvents.some(
+      (e) => e.event_type === 'EMERGENCY_TRIGGERED' && e.family_status === 'PENDING'
+    );
+
+    const overallStatus = activeEmergency
+      ? 'EMERGENCY'
+      : pendingCount > 0
+      ? 'NEEDS_ATTENTION'
+      : 'CALM_PROTECTED';
+
+    const origin = url.origin;
+
+    return jsonResponse({
+      success: true,
+      data: {
+        family_profile: {
+          family_code: link.family_code,
+          senior_name: link.senior_name,
+          senior_phone: link.senior_phone,
+          guardian_name: link.guardian_name,
+          guardian_phone: link.guardian_phone,
+          latest_family_broadcast: link.latest_family_broadcast,
+          broadcast_updated_at: link.broadcast_updated_at,
+          last_senior_activity_at: link.last_senior_activity_at,
+          pairing_url: `${origin}/?vincular=${encodeURIComponent(link.family_code)}`,
+        },
+        kpis: {
+          overall_status: overallStatus,
+          total_events: allEvents.length,
+          pending_consultations: pendingCount,
+          critical_threats_blocked: criticalBlocked,
+        },
+        events: filteredEvents,
+      },
+    });
+  }
+
+  /**
+   * POST /api/v1/senior/family/events
+   * Registra automáticamente en el feed del familiar cualquier revisión hecha por el adulto mayor
+   */
+  static async reportSeniorDeviceEvent(rc: RequestContext): Promise<Response> {
+    let body: Record<string, unknown>;
+    try {
+      body = (await rc.request.json()) as Record<string, unknown>;
+    } catch {
+      return jsonResponse(
+        { success: false, error: { code: 'INVALID_JSON', message: 'Evento inválido.' } },
+        400
+      );
+    }
+
+    const familyCode =
+      typeof body.family_code === 'string' ? body.family_code.trim().toUpperCase() : '';
+    if (!familyCode) {
+      return jsonResponse(
+        { success: false, error: { code: 'MISSING_FAMILY_CODE', message: 'Sin código familiar.' } },
+        400
+      );
+    }
+
+    const allowedTypes = new Set<GuardianEventType>([
+      'URL_SCAN',
+      'MESSAGE_SCAN',
+      'QR_SCAN',
+      'ASK_GUARDIAN',
+      'AUTO_CRITICAL_ALERT',
+      'EMERGENCY_TRIGGERED',
+    ]);
+    const rawType = typeof body.event_type === 'string' ? (body.event_type as GuardianEventType) : 'URL_SCAN';
+    const eventType: GuardianEventType = allowedTypes.has(rawType) ? rawType : 'URL_SCAN';
+    const targetUrl = typeof body.target_url === 'string' ? body.target_url.trim() : '';
+    const contentSummary =
+      typeof body.content_summary === 'string' ? body.content_summary.trim() : '';
+    const scanId = typeof body.scan_id === 'string' ? body.scan_id.trim() : null;
+    const riskScore = typeof body.risk_score === 'number' ? body.risk_score : 0;
+    const rawLevel = typeof body.risk_level === 'string' ? body.risk_level : 'SAFE';
+    const riskLevel: RiskLevel =
+      rawLevel === 'CRITICAL' || rawLevel === 'WARNING' ? rawLevel : 'SAFE';
+
+    const repo = new SeniorRepository(rc.env.DB);
+    const created = await repo.recordFamilyActivityEvent({
+      familyCode,
+      scanId,
+      eventType,
+      targetUrl,
+      contentSummary,
+      riskScore,
+      riskLevel,
+    });
+
+    if (!created) {
+      return jsonResponse(
+        { success: false, error: { code: 'FAMILY_CODE_NOT_FOUND', message: 'Código no registrado.' } },
+        404
+      );
+    }
+
+    return jsonResponse({ success: true, data: { event: created } }, 201);
+  }
+
+  /**
+   * PATCH /api/v1/senior/family/events/:event_id
+   * El familiar responde o marca como atendida cualquier novedad desde su panel /familiar
+   */
+  static async updateFamilyEventDecision(rc: RequestContext): Promise<Response> {
+    const session = await resolveFamilySession(rc.request, rc.env);
+    if (!session) {
+      return jsonResponse(
+        { success: false, error: { code: 'FAMILY_UNAUTHORIZED', message: 'No autorizado.' } },
+        401
+      );
+    }
+
+    const eventId = rc.params.event_id || '';
+    let body: Record<string, unknown>;
+    try {
+      body = (await rc.request.json()) as Record<string, unknown>;
+    } catch {
+      return jsonResponse(
+        { success: false, error: { code: 'INVALID_JSON', message: 'Datos inválidos.' } },
+        400
+      );
+    }
+
+    const rawStatus =
+      typeof body.status === 'string'
+        ? body.status.toUpperCase()
+        : typeof body.decision === 'string'
+        ? body.decision.toUpperCase()
+        : '';
+    if (
+      rawStatus !== 'SAFE_APPROVED' &&
+      rawStatus !== 'DANGER_DELETE' &&
+      rawStatus !== 'RESOLVED_BY_CALL'
+    ) {
+      return jsonResponse(
+        { success: false, error: { code: 'INVALID_STATUS', message: 'Estado inválido.' } },
+        400
+      );
+    }
+
+    const note = typeof body.note === 'string' ? body.note.trim() : '';
+    const repo = new SeniorRepository(rc.env.DB);
+    const updated = await repo.updateFamilyEventDecision({
+      familyCode: session.family_code,
+      eventId,
+      status: rawStatus,
+      note,
+    });
+
+    if (!updated) {
+      return jsonResponse(
+        { success: false, error: { code: 'EVENT_NOT_FOUND', message: 'Novedad no encontrada.' } },
+        404
+      );
+    }
+
+    return jsonResponse({
+      success: true,
+      message: 'Indicación guardada y sincronizada con el teléfono de tu familiar mayor.',
+      data: { event: updated },
+    });
+  }
+
+  /**
+   * POST /api/v1/senior/family/broadcast
+   * Envía un mensaje tranquilizador directo a la pantalla del abuelo
+   */
+  static async sendFamilyBroadcast(rc: RequestContext): Promise<Response> {
+    const session = await resolveFamilySession(rc.request, rc.env);
+    if (!session) {
+      return jsonResponse(
+        { success: false, error: { code: 'FAMILY_UNAUTHORIZED', message: 'No autorizado.' } },
+        401
+      );
+    }
+
+    let body: Record<string, unknown>;
+    try {
+      body = (await rc.request.json()) as Record<string, unknown>;
+    } catch {
+      return jsonResponse(
+        { success: false, error: { code: 'INVALID_JSON', message: 'Mensaje inválido.' } },
+        400
+      );
+    }
+
+    const message = typeof body.message === 'string' ? body.message.trim() : '';
+    if (message.length < 3) {
+      return jsonResponse(
+        {
+          success: false,
+          error: { code: 'EMPTY_MESSAGE', message: 'Escribe un mensaje breve para tu familiar.' },
+        },
+        400
+      );
+    }
+
+    const repo = new SeniorRepository(rc.env.DB);
+    const updated = await repo.updateFamilyBroadcast({
+      familyCode: session.family_code,
+      message,
+    });
+
+    return jsonResponse({
+      success: true,
+      message: 'Mensaje enviado a la pantalla de tu familiar mayor.',
+      data: {
+        latest_family_broadcast: updated?.latest_family_broadcast || message,
+        broadcast_updated_at: updated?.broadcast_updated_at || new Date().toISOString(),
+      },
+    });
+  }
+
+  /**
+   * GET /api/v1/senior/family/senior-sync/:family_code
+   * Permite que el teléfono del abuelo reciba avisos y respuestas de su familiar en tiempo real
+   */
+  static async getSeniorLiveSync(rc: RequestContext): Promise<Response> {
+    const code = (rc.params.family_code || '').trim().toUpperCase();
+    if (!code) {
+      return jsonResponse(
+        { success: false, error: { code: 'MISSING_CODE', message: 'Código faltante.' } },
+        400
+      );
+    }
+
+    const repo = new SeniorRepository(rc.env.DB);
+    const link = await repo.getFamilyLinkByCode(code);
+    if (!link) {
+      return jsonResponse(
+        { success: false, error: { code: 'NOT_FOUND', message: 'Vínculo no encontrado.' } },
+        404
+      );
+    }
+
+    const recentEvents = await repo.listFamilyActivityFeed({
+      familyCode: code,
+      filter: 'ALL',
+      limit: 5,
+    });
+    const latestAnswered = recentEvents.find(
+      (e) => e.family_status === 'DANGER_DELETE' || e.family_status === 'SAFE_APPROVED'
+    );
+
+    return jsonResponse({
+      success: true,
+      data: {
+        family_code: link.family_code,
+        senior_name: link.senior_name,
+        guardian_name: link.guardian_name,
+        guardian_phone: link.guardian_phone,
+        latest_family_broadcast: link.latest_family_broadcast,
+        broadcast_updated_at: link.broadcast_updated_at,
+        latest_answered_event: latestAnswered || null,
+      },
+    });
   }
 }

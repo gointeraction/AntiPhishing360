@@ -1,8 +1,9 @@
-const CACHE_NAME = 'detector360-edge-v2.7.0';
+const CACHE_NAME = 'detector360-edge-v2.8.0';
 const SHELL_ASSETS = [
   '/',
   '/index.html',
   '/guardian.html',
+  '/familiar.html',
   '/login.html',
   '/register.html',
   '/dashboard.html',
@@ -17,6 +18,7 @@ const SHELL_ASSETS = [
   '/js/icons.js',
   '/js/senior-shield.js',
   '/js/guardian-view.js',
+  '/js/familiar-portal.js',
   '/js/landing.js',
   '/js/auth.js',
   '/js/dashboard.js',
@@ -64,6 +66,8 @@ self.addEventListener('fetch', (event) => {
           return (await caches.match('/scan.html')) || (await caches.match('/index.html'));
         }
         if (url.pathname === '/scan/new') return await caches.match('/scan-new.html');
+        if (url.pathname === '/familiar') return await caches.match('/familiar.html');
+        if (url.pathname === '/guardian') return await caches.match('/guardian.html');
         if (url.pathname === '/login') return await caches.match('/login.html');
         if (url.pathname === '/register') return await caches.match('/register.html');
         if (url.pathname === '/dashboard') return await caches.match('/dashboard.html');

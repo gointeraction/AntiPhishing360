@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Acceso Familiar Ángel Guardián — Monitoreo del Adulto Mayor | Detector360</title>
+
+  <link rel="icon" href="/assets/images/logo-emblem.png" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Montserrat:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/css/tokens.css?v=2.8">
+  <link rel="stylesheet" href="/css/landing.css?v=2.8">
+  <link rel="stylesheet" href="/css/senior.css?v=2.8">
+</head>
+<body class="cyber-grid-bg pcb-section-bg" style="min-height:100vh;">
+
+  <!-- NAVBAR GLOBAL -->
+  <div class="navbar-wrapper">
+    <header class="navbar">
+      <div class="navbar-inner">
+        <a href="/" class="brand-logo" aria-label="Detector360 Inicio">
+          <img src="/assets/images/logo-emblem.png" alt="Escudo Oficial Detector360" class="brand-logo-img" width="42" height="42">
+          <span class="brand-wordmark">
+            <span class="brand-wordmark-main">Detector<span class="accent">360</span></span>
+            <span class="brand-wordmark-sub">Portal del Familiar</span>
+          </span>
+        </a>
+
+        <nav class="nav-links" aria-label="Navegación portal familiar">
+          <a href="/">Escáner Principal</a>
+          <a href="/#escudo-adulto-mayor">Modo Adulto Mayor</a>
+        </nav>
+
+        <div class="nav-actions">
+          <button type="button" id="btn-family-logout" class="btn btn-ghost btn-sm" style="display:none;">
+            <span>Cerrar Sesión Familiar</span>
+          </button>
+          <a href="/" class="btn btn-outline-cyan btn-sm">Volver al Inicio</a>
+        </div>
+      </div>
+    </header>
+  </div>
+
+  <main class="container" style="padding: 42px 20px 84px;">
+
+    <!-- 1. PUERTA DE ACCESO Y REGISTRO DE VÍNCULO FAMILIAR -->
+    <section id="family-auth-gate" aria-label="Acceso para hijos, nietos y familiares de confianza">
+      <div class="section-header" style="max-width:780px; margin:0 auto 32px;">
+        <span class="badge badge-tech">Red de Apoyo Familiar • Ángel Guardián</span>
+        <h1 style="margin-top:12px; font-size:2rem; color:#FFFFFF;">
+          Portal de Acceso del Familiar: Revisa Cualquier Novedad con tu Persona Mayor
+        </h1>
+        <p style="color:#C8DDF8; margin-top:8px;">
+          Supervisa en tiempo real los enlaces, mensajes de WhatsApp y códigos QR que revisa tu papá, mamá o abuelo, responde sus dudas con un toque y recibe avisos inmediatos ante intentos de estafa.
+        </p>
+      </div>
+
+      <div class="senior-bento-grid">
+        <!-- Tarjeta A: Ingresar con Código Familiar existente -->
+        <article class="senior-module-card">
+          <div class="senior-card-kicker">
+            <span class="status-led safe" aria-hidden="true"></span>
+            <span>YA TENGO MI CÓDIGO FAMILIAR</span>
+          </div>
+          <h2 style="margin:0; font-size:1.35rem; color:#FFFFFF;">Ingresar al Panel de Novedades</h2>
+          <p style="margin:0; color:#C8DDF8; font-size:0.94rem;">
+            Introduce el Código de Vínculo Familiar y tu Clave o PIN para ver el estado actual y las alertas recientes de tu familiar mayor.
+          </p>
+
+          <form id="family-login-form" style="display:grid; gap:14px; margin-top:4px;">
+            <div>
+              <label for="login-family-code" class="form-label" style="color:#DCEBFB;">Código de Vínculo Familiar</label>
+              <input
+                type="text"
+                id="login-family-code"
+                class="form-input mono"
+                placeholder="Ej: FAM-ABUELO-2026"
+                autocomplete="off"
+                required
+              >
+            </div>
+
+            <div>
+              <label for="login-access-key" class="form-label" style="color:#DCEBFB;">Clave o PIN Familiar</label>
+              <input
+                type="password"
+                id="login-access-key"
+                class="form-input"
+                placeholder="Ingresa tu clave secreta familiar"
+                required
+              >
+            </div>
+
+            <button type="submit" id="btn-family-login-submit" class="btn btn-primary" style="width:100%; justify-content:center;">
+              <span>Entrar a Revisar Novedades</span>
+            </button>
+
+            <button type="button" id="btn-demo-family-login" class="btn btn-outline-cyan btn-sm" style="width:100%; justify-content:center;">
+              <span>Probar Acceso en Vivo (Demo: Abuelo José Gregorio)</span>
+            </button>
+          </form>
+        </article>
+
+        <!-- Tarjeta B: Crear Nuevo Vínculo Familiar -->
+        <article class="senior-module-card">
+          <div class="senior-card-kicker">
+            <span class="status-led cyan" aria-hidden="true"></span>
+            <span>NUEVA CONEXIÓN PROTECTORA</span>
+          </div>
+          <h2 style="margin:0; font-size:1.35rem; color:#FFFFFF;">Crear Acceso para Cuidar a mi Papá / Abuelo</h2>
+          <p style="margin:0; color:#C8DDF8; font-size:0.94rem;">
+            Genera en 15 segundos tu Código Familiar único y un enlace directo de WhatsApp para dejar conectado el teléfono de tu adulto mayor.
+          </p>
+
+          <form id="family-register-form" style="display:grid; gap:12px;">
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:10px;">
+              <div>
+                <label for="reg-senior-name" class="form-label" style="color:#DCEBFB;">Nombre de la Persona Mayor</label>
+                <input type="text" id="reg-senior-name" class="form-input" placeholder="Ej: Abuelo José Gregorio" required>
+              </div>
+              <div>
+                <label for="reg-senior-phone" class="form-label" style="color:#DCEBFB;">Teléfono del Adulto Mayor</label>
+                <input type="tel" id="reg-senior-phone" class="form-input" placeholder="Ej: +58 414-5550101">
+              </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:10px;">
+              <div>
+                <label for="reg-guardian-name" class="form-label" style="color:#DCEBFB;">Tu Nombre (Familiar Guardián)</label>
+                <input type="text" id="reg-guardian-name" class="form-input" placeholder="Ej: Hija Elena Rojas" required>
+              </div>
+              <div>
+                <label for="reg-guardian-phone" class="form-label" style="color:#DCEBFB;">Tu WhatsApp para Alertas</label>
+                <input type="tel" id="reg-guardian-phone" class="form-input" placeholder="Ej: +58 412-5550199">
+              </div>
+            </div>
+
+            <div>
+              <label for="reg-access-key" class="form-label" style="color:#DCEBFB;">Crea tu Clave o PIN de Acceso Familiar</label>
+              <input type="password" id="reg-access-key" class="form-input" placeholder="Mínimo 4 caracteres" minlength="4" required>
+            </div>
+
+            <button type="submit" id="btn-family-reg-submit" class="btn btn-guardian-ask" style="width:100%; justify-content:center;">
+              <span>Crear Vínculo Familiar y Entrar al Panel</span>
+            </button>
+          </form>
+        </article>
+      </div>
+    </section>
+
+    <!-- 2. SALA DE CUIDADO FAMILIAR EN TIEMPO REAL (AUTENTICADA) -->
+    <section id="family-dashboard-shell" style="display:none;" aria-label="Panel de monitoreo en vivo de la persona mayor">
+
+      <!-- Barra Superior de Estado de la Persona Mayor -->
+      <div class="senior-module-card" style="margin-bottom:24px;">
+        <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:16px;">
+          <div>
+            <div style="display:flex; flex-wrap:wrap; align-items:center; gap:10px;">
+              <span id="dash-overall-badge" class="badge badge-safe">TRANQUILO Y PROTEGIDO</span>
+              <span id="dash-family-code" class="mono" style="font-size:0.86rem; color:#00E1FF;"></span>
+            </div>
+            <h1 id="dash-senior-heading" style="margin:10px 0 4px; font-size:1.75rem; color:#FFFFFF;"></h1>
+            <p id="dash-last-activity" style="margin:0; font-size:0.92rem; color:#C8DDF8;"></p>
+          </div>
+
+          <div style="display:flex; flex-wrap:wrap; gap:10px;">
+            <a id="dash-call-senior-btn" href="tel:" class="btn btn-primary btn-sm" style="background:#DC2626; border-color:#FCA5A5;">
+              <span>Llamar Ahora a mi Familiar</span>
+            </a>
+
+            <a id="dash-wa-pair-btn" href="#" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-guardian-ask">
+              <span>Vincular Celular del Abuelo por WhatsApp</span>
+            </a>
+
+            <button type="button" id="btn-copy-pairing-link" class="btn btn-outline-cyan btn-sm">
+              <span>Copiar Enlace de Vinculación</span>
+            </button>
+
+            <button type="button" id="btn-refresh-family-feed" class="btn btn-ghost btn-sm">
+              <span>Actualizar Novedades</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 4 KPIs Familiares -->
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(190px, 1fr)); gap:14px; margin-top:8px;">
+          <div style="background:rgba(2,10,32,0.82); border:1px solid rgba(0,225,255,0.3); border-radius:14px; padding:16px;">
+            <span style="font-size:0.8rem; color:#9CC4F6; display:block;">Dudas Esperando tu Respuesta</span>
+            <strong id="fkpi-pending" style="font-size:1.8rem; color:#FACC15;">0</strong>
+          </div>
+          <div style="background:rgba(2,10,32,0.82); border:1px solid rgba(255,46,76,0.45); border-radius:14px; padding:16px;">
+            <span style="font-size:0.8rem; color:#FCA5A5; display:block;">Peligros Rojos Bloqueados</span>
+            <strong id="fkpi-critical" style="font-size:1.8rem; color:#FF2E4C;">0</strong>
+          </div>
+          <div style="background:rgba(2,10,32,0.82); border:1px solid rgba(16,185,129,0.4); border-radius:14px; padding:16px;">
+            <span style="font-size:0.8rem; color:#6EE7B7; display:block;">Total Revisiones del Adulto Mayor</span>
+            <strong id="fkpi-total" style="font-size:1.8rem; color:#FFFFFF;">0</strong>
+          </div>
+          <div style="background:rgba(2,10,32,0.82); border:1px solid rgba(0,225,255,0.3); border-radius:14px; padding:16px;">
+            <span style="font-size:0.8rem; color:#9CC4F6; display:block;">Familiar Guardián Activo</span>
+            <strong id="fkpi-guardian-name" style="font-size:1.05rem; color:#FFFFFF; display:block; margin-top:6px;"></strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Enviar Mensaje Tranquilizador en Vivo a la Pantalla del Abuelo -->
+      <div class="senior-module-card" style="margin-bottom:24px;">
+        <div class="senior-card-kicker">
+          <span class="status-led cyan" aria-hidden="true"></span>
+          <span>MENSAJE DIRECTO A LA PANTALLA Y VOZ DEL ADULTO MAYOR</span>
+        </div>
+        <h2 style="margin:0; font-size:1.25rem; color:#FFFFFF;">Enviar Aviso Tranquilizador al Teléfono de tu Familiar</h2>
+
+        <div class="quick-demos-row" style="margin-top:0;">
+          <span style="color:#DCEBFB;">Mensajes rápidos:</span>
+          <button
+            type="button"
+            class="demo-chip"
+            data-preset-broadcast="Ya revisé tu alerta desde mi panel: borra ese mensaje sin preocuparte, tu cuenta está segura."
+          >
+            <span>"Ya revisé tu alerta, bórralo tranquilo/a"</span>
+          </button>
+          <button
+            type="button"
+            class="demo-chip"
+            data-preset-broadcast="No respondas ese número desconocido, en 2 minutos te llamo yo a tu celular."
+          >
+            <span>"No respondas, ya te llamo yo"</span>
+          </button>
+        </div>
+
+        <form id="family-broadcast-form" style="display:flex; flex-wrap:wrap; gap:10px;">
+          <input
+            type="text"
+            id="family-broadcast-input"
+            class="form-input"
+            style="flex:1 1 280px;"
+            placeholder="Escribe una nota clara que aparecerá y se leerá en voz alta en su teléfono..."
+            required
+          >
+          <button type="submit" class="btn btn-primary btn-sm">
+            <span>Enviar a su Pantalla Ahora</span>
+          </button>
+        </form>
+      </div>
+
+      <!-- Bandeja Cronológica de Novedades, Dudas y Alertas -->
+      <div class="senior-module-card">
+        <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:12px;">
+          <div>
+            <div class="senior-card-kicker">
+              <span class="status-led safe" aria-hidden="true"></span>
+              <span>BITÁCORA EN VIVO DEL ADULTO MAYOR</span>
+            </div>
+            <h2 style="margin:4px 0 0; font-size:1.35rem; color:#FFFFFF;">Novedades, Consultas en 1 Toque y Alertas Detectadas</h2>
+          </div>
+
+          <div style="display:flex; flex-wrap:wrap; gap:8px;">
+            <button type="button" class="btn btn-primary btn-sm" data-family-filter="ALL">Todas</button>
+            <button type="button" class="btn btn-ghost btn-sm" data-family-filter="PENDING">Esperando mi Respuesta</button>
+            <button type="button" class="btn btn-ghost btn-sm" data-family-filter="CRITICAL">Peligros Rojos</button>
+            <button type="button" class="btn btn-ghost btn-sm" data-family-filter="EMERGENCY">Emergencias</button>
+          </div>
+        </div>
+
+        <div id="family-events-list" style="display:grid; gap:16px; margin-top:8px;" aria-live="polite"></div>
+      </div>
+
+    </section>
+  </main>
+
+  <script type="module" src="/js/familiar-portal.js?v=2.8"></script>
+</body>
+</html>

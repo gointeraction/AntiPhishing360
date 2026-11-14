@@ -5,7 +5,7 @@
 ![Arquitectura](https://img.shields.io/badge/Edge-Cloudflare_Pages_%2B_Workers-0066FF?style=for-the-badge)
 ![Base de Datos](https://img.shields.io/badge/Database-Cloudflare_D1_(SQLite)-0A3D91?style=for-the-badge)
 ![Seguridad](https://img.shields.io/badge/DOM_XSS-Zero_innerHTML-00E1FF?style=for-the-badge)
-![Suite de Pruebas](https://img.shields.io/badge/Tests-16%2F16_Passing-10B981?style=for-the-badge)
+![Suite de Pruebas](https://img.shields.io/badge/Tests-17%2F17_Passing-10B981?style=for-the-badge)
 
 ![Banner Red de Apoyo Familiar Ángel Guardián — Detector360](frontend/assets/images/banner-red-familiar-angel-guardian.jpg)
 
@@ -27,7 +27,7 @@
 6. [Referencia Completa de Endpoints REST (`/api/v1`)](#6-referencia-completa-de-endpoints-rest-apiv1)
 7. [Instalación y Ejecución Local Instantánea](#7-instalación-y-ejecución-local-instantánea)
 8. [Credenciales de Prueba (Entorno Local de Demostración)](#8-credenciales-de-prueba-entorno-local-de-demostración)
-9. [Suite Automatizada de Verificación (`16/16`) y CI/CD](#9-suite-automatizada-de-verificación-1616-y-cicd)
+9. [Suite Automatizada de Verificación (`17/17`) y CI/CD](#9-suite-automatizada-de-verificación-1717-y-cicd)
 10. [Despliegue en Producción (Cloudflare Edge)](#10-despliegue-en-producción-cloudflare-edge)
 11. [Créditos y Referencias Técnicas](#11-créditos-y-referencias-técnicas)
 
@@ -42,7 +42,7 @@ flowchart TD
     subgraph Clientes["Capas de Usuario y Dispositivos"]
         C1["Ciudadano Web / PWA Móvil (/)"]
         C2["Modo Adulto Mayor (Letra Grande + Voz + QR)"]
-        C3["Familiar Ángel Guardián (/guardian)"]
+        C3["Portal del Familiar (/familiar y /guardian)"]
         C4["Funcionario DIDI C.I.C.P.C (/cicpc)"]
     end
 
@@ -61,7 +61,7 @@ flowchart TD
     end
 
     subgraph Datos["Persistencia Distribuida"]
-        D1[("Cloudflare D1 (SQLite - 11 Tablas)")]
+        D1[("Cloudflare D1 (SQLite - 13 Tablas)")]
         KV[("Cloudflare KV (Caché Viral + Feeds CTI + Rate Limit)")]
         R2[("Cloudflare R2 (Snapshots HTML de Evidencia)")]
     end
@@ -99,9 +99,10 @@ Diseñada específicamente para proteger a padres y abuelos frente a manipulaci�
 1. **Accesibilidad Cognitiva y Visual ("Modo Adulto Mayor")**:
    - **Modo Letra Grande y Alto Contraste**: Botón superior persistente que amplía la escala tipográfica, simplifica la pantalla, oculta tecnicismos, activa el botón amarillo gigante **PEGAR Y REVISAR AHORA** y despliega un **Semáforo Gigante** (Verde / Amarillo / Rojo).
    - **Lectura por Voz Automática del Veredicto (Asistente Hablado)**: Narración pausada y clara en español mediante `Web Speech API` (`speechSynthesis`, velocidad `0.88`) que explica en voz alta qué hacer ante cada enlace o mensaje.
-2. **Red de Apoyo Familiar ("Ángel Guardián")**:
-   - **Botón "Preguntar a mi Hijo / Familiar de Confianza" en 1 Toque**: Genera una consulta vinculada en D1 con enlace único (`/guardian?token=...`) listo para compartir por WhatsApp. El familiar revisa el caso desde su propio teléfono y responde con un botón (**"Bórralo ya, es peligroso"** o **"Es seguro"**), actualizando y leyendo en voz alta la respuesta en la pantalla del adulto mayor.
-   - **Alerta Automática ante Peligro Crítico**: Dentro del esquema Escudo Familiar, al detectarse un enlace o mensaje `CRITICAL`, se prepara automáticamente la alerta urgente para el familiar designado.
+2. **Red de Apoyo Familiar ("Ángel Guardián" y Portal Dedicado `/familiar`)**:
+   - **Portal Exclusivo del Familiar (`/familiar`)**: Sala autenticada con sesión aislada (`__Host-d360_family_session`) donde el hijo, hija o nieto revisa en tiempo real **cualquier novedad** ocurrida en el teléfono del abuelo o padre: enlaces inspeccionados (`URL_SCAN`), mensajes o capturas analizadas (`MESSAGE_SCAN`), códigos QR revisados (`QR_SCAN`), consultas de duda (`ASK_GUARDIAN`), alertas críticas automáticas (`AUTO_CRITICAL_ALERT`) y activaciones de emergencia (`EMERGENCY_TRIGGERED`). Permite responder en 1 clic (**"BÓRRALO YA"**, **"ES SEGURO"**, **"Ya lo llamé"**), enviar mensajes tranquilizadores directos que se leen en voz alta en el teléfono del adulto mayor y vincular dispositivos con enlace de 1 toque (`/?vincular=FAM-...`).
+   - **Botón "Preguntar a mi Hijo / Familiar de Confianza" en 1 Toque**: Genera una consulta vinculada en D1 con enlace único (`/guardian?token=...`) listo para compartir por WhatsApp y sincronizada automáticamente con el feed de `/familiar`.
+   - **Alerta Automática ante Peligro Crítico**: Dentro del esquema Escudo Familiar, al detectarse un enlace o mensaje `CRITICAL`, registra la novedad urgente en `/familiar` y prepara la alerta inmediata para el familiar designado.
 3. **Nuevos Vectores de Estafa Frecuentes en Personas Mayores**:
    - **Analizador de Mensajes Completos y Capturas de Pantalla (WhatsApp / SMS / OCR)**: Permite pegar el texto entero recibido (incluso directo en el buscador principal) o cargar una captura de pantalla (`BarcodeDetector`, `TextDetector` y metadatos) para descubrir engaños psicológicos sin enlace o con enlace:
      - *"Hola mamá, bendición, cambié de número..."* (`SENIOR_FAMILY_IMPERSONATION`)
@@ -176,6 +177,7 @@ AntiPhishing360/
 │   │   ├── api-client.js                   # Cliente HTTP unificado hacia /api/v1/*
 │   │   ├── landing.js                      # Escáner principal, simulador Rayos X y feed en vivo
 │   │   ├── senior-shield.js                # Voz, Letra Grande, Ángel Guardián, OCR/QR, Directorio y Simulador
+│   │   ├── familiar-portal.js              # Sala de monitoreo en vivo del familiar (/familiar)
 │   │   ├── guardian-view.js                # Interfaz de respuesta en 1 toque para el familiar
 │   │   ├── forensic-viewer.js              # Visor forense detallado (/scan/:id) y denuncia C.I.C.P.C
 │   │   ├── cicpc-login.js                  # Acceso multifactor de 3 llaves para funcionarios
@@ -186,20 +188,22 @@ AntiPhishing360/
 │   │   ├── pwa-install.js                  # Instalación guiada PWA y receptor Share Target
 │   │   └── icons.js                        # Factoría segura de iconografía SVG
 │   ├── index.html                          # Portada comercial + Escáner + Centro Adulto Mayor
+│   ├── familiar.html                       # Portal autenticado de novedades para el familiar (/familiar)
 │   ├── guardian.html                       # Vista de respuesta familiar Ángel Guardián (/guardian)
 │   ├── scan.html                           # Reporte forense individual (/scan/:id)
 │   ├── scan-new.html                       # Escáner dedicado (/scan/new)
 │   ├── login.html / register.html          # Autenticación ciudadana
 │   ├── dashboard.html                      # Panel personal del ciudadano (/dashboard)
 │   ├── cicpc-login.html / cicpc.html       # Portal restringido C.I.C.P.C (/cicpc/login y /cicpc)
-│   ├── manifest.webmanifest / sw.js        # Manifiesto PWA y Service Worker v2.6.0
+│   ├── manifest.webmanifest / sw.js        # Manifiesto PWA y Service Worker v2.8.0
 │   └── _headers / _redirects               # Reglas nativas para Cloudflare Pages
 ├── worker/                                 # Backend Serverless sobre Cloudflare Workers (TypeScript)
 │   ├── migrations/
 │   │   ├── 0001_initial_schema.sql         # Usuarios, escaneos, hallazgos, alertas y leads
 │   │   ├── 0002_seed_commercial_data.sql   # Semillas iniciales del muro comunitario
 │   │   ├── 0003_cicpc_command_module.sql   # Funcionarios, expedientes y bitácora C.I.C.P.C
-│   │   └── 0004_senior_protection_module.sql # Ángel Guardián y Directorio Blanco Verificado
+│   │   ├── 0004_senior_protection_module.sql # Ángel Guardián y Directorio Blanco Verificado
+│   │   └── 0005_guardian_family_portal.sql # Vínculos familiares y bitácora en vivo (/familiar)
 │   ├── src/
 │   │   ├── controllers/                    # Controladores REST (Auth, Scan, Commercial, Community, Cicpc, Senior)
 │   │   ├── middlewares/                    # Cabeceras CSP/HSTS, Auth JWT, Auth C.I.C.P.C y Rate Limit
@@ -219,7 +223,7 @@ AntiPhishing360/
 
 ## 5. Modelo de Datos en Cloudflare D1 (Migraciones SQL)
 
-Las 4 migraciones ubicadas en `worker/migrations/` construyen automáticamente las **11 tablas relacionales** con integridad referencial (`FOREIGN KEY`) y restricciones `CHECK`:
+Las 5 migraciones ubicadas en `worker/migrations/` construyen automáticamente las **13 tablas relacionales** con integridad referencial (`FOREIGN KEY`) y restricciones `CHECK`:
 
 | Migración | Tabla | Propósito |
 | :--- | :--- | :--- |
@@ -234,6 +238,8 @@ Las 4 migraciones ubicadas en `worker/migrations/` construyen automáticamente l
 | `0003` | `cicpc_audit_logs` | Bitácora inmutable de cadena de custodia de todas las operaciones policiales y exportaciones. |
 | `0004` | `guardian_consultations` | Consultas en 1 toque y alertas críticas automáticas de la red familiar **Ángel Guardián**. |
 | `0004` | `verified_directory` | Directorio Blanco Oficial de bancos, organismos públicos y empresas de envío verificadas. |
+| `0005` | `guardian_family_links` | Códigos de vínculo familiar (`FAM-...`), credenciales `PBKDF2-HMAC-SHA512` y avisos directos al adulto mayor. |
+| `0005` | `guardian_activity_feed` | Bitácora cronológica de todas las novedades revisadas por el adulto mayor y decisiones tomadas por su familiar. |
 
 ---
 
@@ -270,6 +276,14 @@ Las 4 migraciones ubicadas en `worker/migrations/` construyen automáticamente l
 | `GET` | `/api/v1/senior/guardian/:token` | Token Familiar | Consulta estado y detalles de la solicitud enviada al Ángel Guardián. |
 | `POST` | `/api/v1/senior/guardian/:token/reply` | Token Familiar | Registra el dictamen del familiar (`DANGER_DELETE` o `SAFE_APPROVED`). |
 | `POST` | `/api/v1/senior/emergency-report` | Público | Protocolo de emergencia: crea expediente `URGENT` en C.I.C.P.C y retorna teléfono de bloqueo bancario. |
+| `POST` | `/api/v1/senior/family/register` | Público | Crea un nuevo Código de Vínculo Familiar (`FAM-...`), emite cookie familiar y devuelve enlace `/?vincular=...`. |
+| `POST` | `/api/v1/senior/family/login` | Público | Autentica al familiar con su Código Familiar + Clave y emite `__Host-d360_family_session`. |
+| `POST` | `/api/v1/senior/family/logout` | Sesión Familiar | Cierra la sesión del Portal del Familiar. |
+| `GET` | `/api/v1/senior/family/dashboard` | Sesión Familiar | Devuelve perfil del adulto mayor, KPIs y bitácora filtrable de todas sus novedades en tiempo real. |
+| `POST` | `/api/v1/senior/family/events` | Dispositivo Vinculado | Sincroniza revisiones de enlaces, mensajes o QR del teléfono del abuelo con el portal del familiar. |
+| `PATCH` | `/api/v1/senior/family/events/:event_id` | Sesión Familiar | Registra decisión del familiar (`DANGER_DELETE`, `SAFE_APPROVED`, `RESOLVED_BY_CALL`) y sincroniza en vivo. |
+| `POST` | `/api/v1/senior/family/broadcast` | Sesión Familiar | Envía un mensaje tranquilizador directo a la pantalla y voz del adulto mayor. |
+| `GET` | `/api/v1/senior/family/senior-sync/:family_code` | Dispositivo Vinculado | Permite al teléfono del adulto mayor recibir avisos y respuestas del familiar en tiempo real. |
 
 ### Módulo Restringido de Comando C.I.C.P.C
 | Método | Ruta | Acceso | Descripción |
@@ -305,16 +319,25 @@ npm install
 npm run dev
 ```
 
-Al iniciar `dev-server.ts`, el sistema crea automáticamente `.local-edge/detector360.sqlite`, ejecuta en orden las migraciones `0001` a `0004` y levanta en `http://localhost:8788`:
+Al iniciar `dev-server.ts`, el sistema crea automáticamente `.local-edge/detector360.sqlite`, ejecuta en orden las migraciones `0001` a `0005` y levanta en `http://localhost:8788`:
 - **Portada Comercial y Escáner**: `http://localhost:8788/`
 - **Centro Adulto Mayor y Ángel Guardián**: `http://localhost:8788/#escudo-adulto-mayor`
-- **Vista Demo del Familiar Ángel Guardián**: `http://localhost:8788/guardian?token=GRD2026DEMO1`
+- **Portal de Acceso del Familiar (Bitácora de Novedades)**: `http://localhost:8788/familiar`
+- **Vista Rápida en 1 Toque del Familiar**: `http://localhost:8788/guardian?token=GRD2026DEMO1`
 - **Acceso Restringido C.I.C.P.C**: `http://localhost:8788/cicpc/login`
 
 ---
 
 ## 8. Credenciales de Prueba (Entorno Local de Demostración)
 
+### 8.1 Portal del Familiar del Adulto Mayor (`/familiar`)
+La migración `0005_guardian_family_portal.sql` incluye un vínculo familiar de demostración con novedades reales precargadas para probar de inmediato la sala de monitoreo:
+
+| Perfil Protegido | Familiar Responsable | Código de Vínculo Familiar | Clave / PIN Familiar |
+| :--- | :--- | :--- | :--- |
+| **Abuelo José Gregorio** (`+58 414-5550101`) | **Hija Elena Rojas** (`+58 412-5550199`) | `FAM-ABUELO-2026` | `ClaveFamiliar2026!` |
+
+### 8.2 Módulo de Comando C.I.C.P.C (`/cicpc/login`)
 La migración `0003_cicpc_command_module.sql` aprovisiona dos perfiles institucionales de prueba para evaluar el módulo `/cicpc/login` en entorno local (en producción, la llave maestra se sobreescribe mediante el secreto `CICPC_MASTER_KEY` de Cloudflare Workers):
 
 | Rol Institucional | Credencial (`badge_id`) | Contraseña Operativa | Clave de Seguridad Institucional |
@@ -324,7 +347,7 @@ La migración `0003_cicpc_command_module.sql` aprovisiona dos perfiles instituci
 
 ---
 
-## 9. Suite Automatizada de Verificación (`16/16`) y CI/CD
+## 9. Suite Automatizada de Verificación (`17/17`) y CI/CD
 
 Para ejecutar la auditoría automatizada completa de extremo a extremo:
 
@@ -333,7 +356,7 @@ npm test
 # equivalente a: node tests/verify-all.ts
 ```
 
-La suite valida **16 bloques críticos** sobre una base de datos efímera aislada:
+La suite valida **17 bloques críticos** sobre una base de datos efímera aislada:
 1. Rutas limpias Frontend, PWA Manifest, Service Worker y cabeceras CSP/HSTS.
 2. Feed comercial en vivo y ofuscación preventiva de dominios (`[.]`).
 3. Bloqueo estricto Anti-SSRF (`localhost`, `127.0.0.1`, `169.254.169.254`, `192.168.x.x`, `10.x.x.x`, `[::1]`, `file://`, `javascript:`).
@@ -350,6 +373,7 @@ La suite valida **16 bloques críticos** sobre una base de datos efímera aislad
 14. Módulo restringido C.I.C.P.C: aislamiento de cookies, rechazo de llaves inválidas, autenticación de 3 factores, recepción de denuncias y ejecución de acciones estratégicas.
 15. Motor heurístico predictivo Day-Zero (`julioliraup/Antiphishing`: Typosquatting Damerau-Levenshtein, IDN Punycode, IPv4 literal, `@` userinfo, defensa ante servidores caídos y exportación de reglas Suricata IDS/IPS `sid:6090001+`).
 16. Suite Integral Adulto Mayor: `/guardian`, `camera=(self)`, analizador psicológico de mensajes/capturas, flujo completo Ángel Guardián, Directorio Blanco Oficial, simulador de 3 casos reales y protocolo de emergencia bancaria + C.I.C.P.C `URGENT`.
+17. Portal de Acceso del Familiar (`/familiar`): aislamiento criptográfico de sesión `__Host-d360_family_session`, login con vínculo `FAM-ABUELO-2026`, recepción en vivo de novedades de QR y consultas 1-toque, respuesta desde el dashboard sincronizada con el adulto mayor, envío de mensajes tranquilizadores directos y creación de nuevos vínculos familiares.
 
 Cada *push* o *Pull Request* hacia `main` ejecuta automáticamente esta suite mediante GitHub Actions (`.github/workflows/ci-security.yml`).
 

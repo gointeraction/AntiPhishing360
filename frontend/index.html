@@ -13,9 +13,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Montserrat:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="/css/tokens.css?v=2.7">
-  <link rel="stylesheet" href="/css/landing.css?v=2.7">
-  <link rel="stylesheet" href="/css/senior.css?v=2.7">
+  <link rel="stylesheet" href="/css/tokens.css?v=2.8">
+  <link rel="stylesheet" href="/css/landing.css?v=2.8">
+  <link rel="stylesheet" href="/css/senior.css?v=2.8">
 </head>
 <body class="cyber-grid-bg pcb-section-bg">
 
@@ -40,6 +40,7 @@
         <nav id="navbar-links" class="nav-links" aria-label="Navegación principal">
           <a href="#hero-scanner">Escáner Gratis</a>
           <a href="#escudo-adulto-mayor">Adulto Mayor</a>
+          <a href="/familiar">Acceso Familiar</a>
           <a href="#como-funciona">Cómo Funciona</a>
           <a href="#enganos-comunes">Engaños Comunes</a>
           <a href="#planes">Planes</a>
@@ -957,21 +958,21 @@
           </div>
 
           <div class="midpage-dock-actions">
-            <a href="#guardian-card-anchor" class="btn btn-primary btn-sm">
+            <a href="/familiar" class="btn btn-primary btn-sm">
               <svg class="icon-svg" style="width:16px; height:16px;" viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
                 <path d="m9 12 2 2 4-4"></path>
               </svg>
-              <span>Vincular mi Ángel Guardián</span>
+              <span>Portal de Acceso del Familiar</span>
             </a>
 
-            <a href="/guardian?token=GRD2026DEMO1" class="btn btn-outline-cyan btn-sm">
-              <span>Ver Pantalla del Familiar (Demo)</span>
+            <a href="#guardian-card-anchor" class="btn btn-outline-cyan btn-sm">
+              <span>Vincular Teléfono del Abuelo</span>
             </a>
 
-            <button type="button" class="btn btn-ghost btn-sm" data-open-plan-modal="family_shield">
-              <span>Activar Escudo Familiar</span>
-            </button>
+            <a href="/guardian?token=GRD2026DEMO1" class="btn btn-ghost btn-sm">
+              <span>Respuesta Rápida 1 Toque</span>
+            </a>
           </div>
         </div>
       </div>
@@ -1108,14 +1109,20 @@
                 </div>
               </div>
 
-              <div>
-                <label for="guardian-family-phone" class="form-label" style="color:#DCEBFB;">Teléfono WhatsApp de tu familiar</label>
-                <input type="tel" id="guardian-family-phone" class="form-input" placeholder="Ej: +58 412 555 0199">
+              <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:10px;">
+                <div>
+                  <label for="guardian-family-phone" class="form-label" style="color:#DCEBFB;">Teléfono WhatsApp de tu familiar</label>
+                  <input type="tel" id="guardian-family-phone" class="form-input" placeholder="Ej: +58 412 555 0199">
+                </div>
+                <div>
+                  <label for="guardian-family-code" class="form-label" style="color:#DCEBFB;">Código de Vínculo Familiar (/familiar)</label>
+                  <input type="text" id="guardian-family-code" class="form-input mono" placeholder="Ej: FAM-ABUELO-2026" style="text-transform:uppercase;">
+                </div>
               </div>
 
               <label style="display:flex; align-items:flex-start; gap:10px; color:#DCEBFB; font-size:0.9rem; cursor:pointer;">
                 <input type="checkbox" id="guardian-auto-critical-chk" checked style="margin-top:4px; width:18px; height:18px;">
-                <span><strong>Alerta Automática ante Peligro Crítico (Escudo Familiar):</strong> preparar alerta inmediata para mi familiar cada vez que revise un enlace Rojo Peligroso.</span>
+                <span><strong>Alerta Automática y Bitácora Familiar:</strong> sincronizar novedades y peligros críticos con el Portal del Familiar para que pueda orientarme a tiempo.</span>
               </label>
 
               <div style="display:flex; flex-wrap:wrap; gap:10px;">
@@ -1125,9 +1132,13 @@
                 <button type="button" id="btn-ask-guardian-direct" class="btn btn-sm btn-guardian-ask">
                   <span>Preguntar a mi Familiar Ahora (1 Toque)</span>
                 </button>
+                <a href="/familiar" class="btn btn-ghost btn-sm">
+                  <span>Acceso del Familiar (/familiar)</span>
+                </a>
               </div>
             </form>
 
+            <div id="senior-family-broadcast-banner" class="guardian-live-status" aria-live="polite"></div>
             <div id="guardian-live-status-box" class="guardian-live-status" aria-live="polite"></div>
           </article>
 
@@ -1900,6 +1911,6 @@
     </button>
   </div>
 
-  <script type="module" src="/js/landing.js?v=2.7"></script>
+  <script type="module" src="/js/landing.js?v=2.8"></script>
 </body>
 </html>
