@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#020B22">
+  <title>Centro de Comando e Inteligencia Forense C.I.C.P.C — Detector360</title>
+
+  <link rel="icon" href="/assets/images/logo-emblem.png" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Montserrat:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/css/tokens.css?v=2.4">
+  <link rel="stylesheet" href="/css/app.css?v=2.4">
+  <link rel="stylesheet" href="/css/cicpc.css?v=2.4">
+</head>
+<body class="cicpc-command-body">
+
+  <div class="cicpc-security-classification-bar">
+    SALA SITUACIONAL DE INTELIGENCIA ESTRATÉGICA • DIVISIÓN DE INVESTIGACIONES DE DELITOS INFORMÁTICOS (C.I.C.P.C)
+  </div>
+
+  <!-- Estado de Verificación de Credencial -->
+  <div id="cicpc-auth-gate" style="padding: 96px 20px; text-align: center;">
+    <span class="badge badge-tech">Verificando Credenciales de Seguridad</span>
+    <p style="margin-top: 12px; color: #C5DCFA;">Validando token criptográfico institucional ante Cloudflare Edge...</p>
+  </div>
+
+  <!-- Aplicación Principal Restringida -->
+  <div id="cicpc-app-shell" style="display:none;">
+    <header class="cicpc-topbar">
+      <div class="cicpc-topbar-inner">
+        <div class="cicpc-brand-cluster">
+          <img src="/assets/images/logo-emblem.png" alt="Escudo Detector360" width="42" height="42" class="brand-logo-img">
+          <div>
+            <div style="font-family:var(--font-display); font-weight:800; font-size:1.05rem; letter-spacing:0.02em;">
+              MÓDULO DE COMANDO C.I.C.P.C <span style="color:var(--holographic-cyan-glow);">• DIDI</span>
+            </div>
+            <div style="font-size:0.78rem; color:#9CC4F6;">
+              Recepción Ciudadana, Revisión Forense Experta y Acciones Estratégicas
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex; align-items:center; flex-wrap:wrap; gap:10px;">
+          <div class="cicpc-officer-pill">
+            <span class="status-led safe" aria-hidden="true"></span>
+            <div>
+              <strong id="officer-name-label" style="display:block; color:#FFFFFF;"></strong>
+              <span id="officer-badge-label" class="mono" style="font-size:0.73rem; color:#F8E39C;"></span>
+            </div>
+          </div>
+
+          <button type="button" id="btn-refresh-command" class="btn btn-outline-cyan btn-sm">
+            <span>Sincronizar Casos</span>
+          </button>
+
+          <button type="button" id="btn-export-csv" class="btn btn-ghost btn-sm">
+            <span>Exportar Inteligencia CSV</span>
+          </button>
+
+          <button type="button" id="btn-cicpc-logout" class="btn btn-danger-soft btn-sm">
+            <span>Cerrar Sesión Segura</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="cicpc-main-container">
+      <!-- 1. TABLERO DE KPIS ESTRATÉGICOS -->
+      <section class="cicpc-kpi-grid" aria-label="Indicadores estratégicos nacionales">
+        <div class="cicpc-kpi-card">
+          <span class="cicpc-kpi-label">Total Denuncias / Casos</span>
+          <span id="kpi-total-cases" class="cicpc-kpi-value">0</span>
+        </div>
+        <div class="cicpc-kpi-card urgent">
+          <span class="cicpc-kpi-label">Prioridad Urgente</span>
+          <span id="kpi-urgent-cases" class="cicpc-kpi-value">0</span>
+        </div>
+        <div class="cicpc-kpi-card urgent">
+          <span class="cicpc-kpi-label">Víctimas con Exposición</span>
+          <span id="kpi-affected-victims" class="cicpc-kpi-value">0</span>
+        </div>
+        <div class="cicpc-kpi-card gold">
+          <span class="cicpc-kpi-label">Pendientes de Revisión</span>
+          <span id="kpi-pending-cases" class="cicpc-kpi-value">0</span>
+        </div>
+        <div class="cicpc-kpi-card">
+          <span class="cicpc-kpi-label">En Análisis Experto</span>
+          <span id="kpi-analysis-cases" class="cicpc-kpi-value">0</span>
+        </div>
+        <div class="cicpc-kpi-card">
+          <span class="cicpc-kpi-label">Acciones Ejecutadas</span>
+          <span id="kpi-actioned-cases" class="cicpc-kpi-value">0</span>
+        </div>
+      </section>
+
+      <!-- 2. RADAR DE CAMPAÑAS COORDINADAS Y VECTORES -->
+      <section class="cicpc-intel-row" aria-label="Inteligencia de campañas activas">
+        <div class="cicpc-panel-card">
+          <div class="cicpc-panel-header">
+            <div>
+              <h2 style="font-size:1.18rem;">Radar de Campañas Maliciosas Agrupadas por Dominio</h2>
+              <p style="font-size:0.82rem; color:#9CC4F6; margin-top:2px;">
+                Correlación automática de múltiples notificaciones ciudadanas para detectar olas masivas de fraude.
+              </p>
+            </div>
+            <span class="badge badge-tech">Inteligencia Estratégica</span>
+          </div>
+          <div class="table-responsive">
+            <table class="cicpc-table">
+              <thead>
+                <tr>
+                  <th>Dominio Infractor</th>
+                  <th>Reportes</th>
+                  <th>Riesgo Máx</th>
+                  <th>Entidad Suplantada</th>
+                  <th>Acción Estratégica</th>
+                </tr>
+              </thead>
+              <tbody id="campaigns-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="cicpc-panel-card">
+          <div class="cicpc-panel-header">
+            <div>
+              <h2 style="font-size:1.18rem;">Vectores de Propagación</h2>
+              <p style="font-size:0.82rem; color:#9CC4F6; margin-top:2px;">
+                Distribución por canal de ataque reportado por los ciudadanos.
+              </p>
+            </div>
+          </div>
+          <div id="channels-bars-container"></div>
+        </div>
+      </section>
+
+      <!-- 3. MESA CENTRAL: BANDEJA DE CASOS + INSPECTOR FORENSE Y DICTAMEN EXPERTO -->
+      <section class="cicpc-workspace-grid" aria-label="Bandeja de denuncias y mesa de análisis experto">
+        <!-- Columna Izquierda: Bandeja Filtrable -->
+        <aside class="cicpc-panel-card cicpc-cases-sidebar">
+          <div class="cicpc-panel-header">
+            <h2 style="font-size:1.15rem;">Bandeja de Denuncias y Notificaciones</h2>
+            <span id="cases-count-badge" class="badge badge-tech">0 casos</span>
+          </div>
+
+          <div class="form-group" style="margin-bottom:10px;">
+            <input
+              type="search"
+              id="filter-search-input"
+              class="form-input"
+              placeholder="Buscar expediente, dominio, teléfono..."
+              aria-label="Buscar casos"
+            >
+          </div>
+
+          <div class="cicpc-filters-grid">
+            <select id="filter-status-select" class="form-select" aria-label="Filtrar por estado">
+              <option value="all">Todos los estados</option>
+              <option value="pending">Pendientes de revisión</option>
+              <option value="in_analysis">En análisis experto</option>
+              <option value="strategic_action">Acción estratégica activa</option>
+              <option value="mitigated">Neutralizados / Bloqueados</option>
+              <option value="archived">Archivados</option>
+            </select>
+
+            <select id="filter-priority-select" class="form-select" aria-label="Filtrar por prioridad">
+              <option value="all">Todas las prioridades</option>
+              <option value="URGENT">Prioridad Urgente</option>
+              <option value="HIGH">Prioridad Alta</option>
+              <option value="NORMAL">Prioridad Normal</option>
+            </select>
+          </div>
+
+          <div id="cicpc-cases-list" class="cicpc-cases-list" role="list"></div>
+        </aside>
+
+        <!-- Columna Derecha: Expediente Forense Completo y Toma de Decisiones -->
+        <div class="cicpc-panel-card" id="cicpc-inspector-panel">
+          <div id="inspector-empty-state" style="padding: 48px 20px; text-align:center; color:#9CC4F6;">
+            Selecciona un expediente de la bandeja izquierda para inspeccionar su radiografía forense y registrar acciones estratégicas.
+          </div>
+
+          <div id="inspector-detail-content" style="display:none;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
+              <div>
+                <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                  <span id="detail-case-number" class="badge badge-tech mono"></span>
+                  <span id="detail-priority-badge" class="badge badge-critical"></span>
+                  <span id="detail-impact-badge" class="badge badge-warning"></span>
+                </div>
+                <h2 id="detail-domain-title" style="font-size:1.45rem; margin-top:10px; word-break:break-all;"></h2>
+                <div id="detail-target-url" class="mono" style="font-size:0.82rem; color:#9CC4F6; margin-top:4px; word-break:break-all;"></div>
+              </div>
+
+              <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                <button type="button" id="btn-download-dossier" class="btn btn-outline-cyan btn-sm">
+                  Descargar Evidencia JSON
+                </button>
+                <button type="button" id="btn-print-dossier" class="btn btn-ghost btn-sm">
+                  Imprimir Acta PDF
+                </button>
+              </div>
+            </div>
+
+            <!-- Metadatos de la Denuncia Ciudadana -->
+            <div class="cicpc-dossier-meta-grid">
+              <div class="cicpc-meta-box">
+                <span class="lbl">Entidad Suplantada</span>
+                <span id="detail-entity" class="val"></span>
+              </div>
+              <div class="cicpc-meta-box">
+                <span class="lbl">Vector / Canal de Recepción</span>
+                <span id="detail-channel" class="val"></span>
+              </div>
+              <div class="cicpc-meta-box">
+                <span class="lbl">Remitente / Teléfono Sospechoso</span>
+                <span id="detail-suspect" class="val mono"></span>
+              </div>
+              <div class="cicpc-meta-box">
+                <span class="lbl">Origen del Reporte</span>
+                <span id="detail-source-type" class="val"></span>
+              </div>
+              <div class="cicpc-meta-box">
+                <span class="lbl">Contacto del Denunciante</span>
+                <span id="detail-reporter-contact" class="val"></span>
+              </div>
+              <div class="cicpc-meta-box">
+                <span class="lbl">Puntaje Forense Rayos X</span>
+                <span id="detail-risk-score" class="val mono"></span>
+              </div>
+            </div>
+
+            <div>
+              <strong style="font-size:0.85rem; color:#F8E39C; text-transform:uppercase; letter-spacing:0.04em;">
+                Testimonio / Notificación del Usuario
+              </strong>
+              <div id="detail-statement" class="cicpc-statement-box"></div>
+            </div>
+
+            <!-- Evidencia Técnica Forense (Hallazgos + Código + SHA-256) -->
+            <div style="margin-top:18px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:10px;">
+                <strong style="font-size:0.95rem;">Evidencia Técnica Rayos X Web (DOM / Transporte / JS)</strong>
+                <span id="detail-sha256" class="mono" style="font-size:0.75rem; color:var(--holographic-cyan-glow); word-break:break-all;"></span>
+              </div>
+              <div id="detail-findings-box" style="display:grid; gap:10px;"></div>
+            </div>
+
+            <div class="source-viewer-card" style="margin-top:16px;">
+              <div class="source-viewer-header">
+                <strong>Líneas Infractoras Capturadas en el Código Fuente</strong>
+                <span id="detail-transport-summary"></span>
+              </div>
+              <div id="detail-source-lines" class="source-lines-list"></div>
+            </div>
+
+            <!-- FORMULARIO DE DICTAMEN EXPERTO Y ACCIÓN ESTRATÉGICA -->
+            <form id="cicpc-decision-form" class="cicpc-decision-form">
+              <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:14px;">
+                <h3 style="font-size:1.15rem;">Dictamen Experto y Ejecución de Acción Estratégica</h3>
+                <span id="detail-last-reviewed" style="font-size:0.78rem; color:#9CC4F6;"></span>
+              </div>
+
+              <div class="cicpc-dossier-meta-grid" style="margin-top:0;">
+                <div class="form-group" style="margin-bottom:0;">
+                  <label for="decision-status" class="form-label">Estado Operativo del Expediente</label>
+                  <select id="decision-status" class="form-select" required>
+                    <option value="pending">Pendiente de Revisión</option>
+                    <option value="in_analysis">En Análisis Forense Experto</option>
+                    <option value="strategic_action">Acción Estratégica en Curso</option>
+                    <option value="mitigated">Neutralizado / Dominio Bloqueado</option>
+                    <option value="archived">Cerrado / Archivado</option>
+                  </select>
+                </div>
+
+                <div class="form-group" style="margin-bottom:0;">
+                  <label for="decision-priority" class="form-label">Nivel de Prioridad Táctica</label>
+                  <select id="decision-priority" class="form-select" required>
+                    <option value="URGENT">URGENTE (Afectación Activa)</option>
+                    <option value="HIGH">ALTA (Phishing Confirmado)</option>
+                    <option value="NORMAL">NORMAL (Preventivo)</option>
+                  </select>
+                </div>
+
+                <div class="form-group" style="margin-bottom:0;">
+                  <label for="decision-action" class="form-label">Acción Estratégica Ordenada</label>
+                  <select id="decision-action" class="form-select" required>
+                    <option value="NONE">Sin acción externa aún</option>
+                    <option value="ISP_DNS_BLOCK_REQUEST">Bloqueo DNS Nacional (CONATEL / Operadoras ISP)</option>
+                    <option value="BANKING_FRAUD_ALERT">Alerta Temprana Interbancaria (SUDEBAN / Banca)</option>
+                    <option value="REGISTRAR_TAKEDOWN">Baja Internacional de Dominio / Hosting (Abuse)</option>
+                    <option value="TRACE_EXFILTRATION_SERVER">Rastreo Forense de Servidor Receptor C2 / IP</option>
+                    <option value="FIELD_INVESTIGATION_OPENED">Investigación Penal y Trazabilidad Telefónica</option>
+                    <option value="PUBLIC_PREVENTION_BULLETIN">Boletín Oficial de Alerta Ciudadana</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group" style="margin-top:14px;">
+                <label for="decision-notes" class="form-label">Dictamen Técnico, Observaciones Forenses e Instrucciones Operativas</label>
+                <textarea
+                  id="decision-notes"
+                  class="form-textarea"
+                  rows="3"
+                  placeholder="Registre conclusiones técnicas del análisis de código, servidores receptores detectados y directrices estratégicas..."
+                ></textarea>
+              </div>
+
+              <button type="submit" id="decision-submit-btn" class="btn btn-primary">
+                Registrar Dictamen Experto y Ejecutar Acción Estratégica
+              </button>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. BITÁCORA INMUTABLE DE CADENA DE CUSTODIA -->
+      <section id="cicpc-audit-section" class="cicpc-panel-card" style="margin-top: 26px;" aria-label="Bitácora de auditoría">
+        <div class="cicpc-panel-header">
+          <div>
+            <h2 style="font-size:1.15rem;">Bitácora de Cadena de Custodia y Acciones Oficiales</h2>
+            <p style="font-size:0.82rem; color:#9CC4F6; margin-top:2px;">
+              Registro cronológico inmutable de accesos y decisiones tácticas tomadas por funcionarios acreditados.
+            </p>
+          </div>
+        </div>
+        <div class="table-responsive">
+          <table class="cicpc-table">
+            <thead>
+              <tr>
+                <th>Fecha UTC</th>
+                <th>Credencial</th>
+                <th>Funcionario</th>
+                <th>Operación</th>
+                <th>Detalle Registrado</th>
+              </tr>
+            </thead>
+            <tbody id="audit-logs-tbody"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="/js/cicpc-command.js?v=2.4"></script>
+</body>
+</html>

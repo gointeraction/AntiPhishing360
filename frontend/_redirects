@@ -1,0 +1,7 @@
+/login /login.html 200
+/register /register.html 200
+/dashboard /dashboard.html 200
+/scan/new /scan-new.html 200
+/scan/:id /scan.html 200
+/cicpc/login /cicpc-login.html 200
+/cicpc /cicpc.html 200

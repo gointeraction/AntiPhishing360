@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#03153E">
+  <title>Reporte Forense de Seguridad — Detector360</title>
+
+  <link rel="icon" href="/assets/images/logo-emblem.png" type="image/png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Montserrat:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+
+  <link rel="stylesheet" href="/css/tokens.css">
+  <link rel="stylesheet" href="/css/app.css">
+</head>
+
+<body>
+
+  <div class="navbar-wrapper">
+    <header class="navbar">
+      <div class="navbar-inner">
+        <a href="/" class="brand-logo">
+          <img src="/assets/images/logo-emblem.png" alt="Escudo Oficial Detector360" class="brand-logo-img" width="44"
+            height="44">
+          <span class="brand-wordmark">
+            <span class="brand-wordmark-main">Detector<span class="accent">360</span></span>
+            <span class="brand-wordmark-sub">Anti-Phishing</span>
+          </span>
+        </a>
+
+        <div class="nav-actions">
+          <a href="/" class="btn btn-ghost btn-sm">
+            <svg class="icon-svg" style="width:15px; height:15px;" viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <span>Analizar Otro Enlace</span>
+          </a>
+          <div id="navbar-auth-actions" style="display:flex; gap:10px; align-items:center;">
+            <a href="/login" class="btn btn-ghost btn-sm">Iniciar Sesión</a>
+            <a href="/register" class="btn btn-outline-cyan btn-sm">Crear Cuenta Gratis</a>
+          </div>
+        </div>
+      </div>
+    </header>
+  </div>
+
+  <main class="report-container">
+    <div id="report-loading" style="text-align:center; padding: 64px 16px;">
+      <span class="badge badge-tech">Cargando Evidencia Forense</span>
+      <p style="margin:12px auto 0; color:var(--text-secondary);">Recuperando radiografía verificada desde Cloudflare
+        Edge...</p>
+    </div>
+
+    <div id="report-error"
+      style="display:none; text-align:center; padding:64px 20px; background:var(--bg-surface); border:1px solid var(--border-default); border-radius:18px;">
+      <h2>Reporte no disponible</h2>
+      <p id="report-error-msg" style="margin:10px auto 0; color:var(--text-secondary);"></p>
+      <a href="/" class="btn btn-primary" style="margin-top:20px;">Analizar un Nuevo Enlace</a>
+    </div>
+
+    <div id="report-content" style="display:none;">
+      <!-- 1. BANNER DE VEREDICTO CIUDADANO -->
+      <section id="verdict-banner" class="verdict-hero-banner risk-CRITICAL" aria-label="Veredicto principal">
+        <div class="score-gauge-wrap">
+          <svg width="124" height="124" viewBox="0 0 120 120" aria-hidden="true">
+            <circle cx="60" cy="60" r="50" stroke="rgba(255,255,255,0.14)" stroke-width="10" fill="none" />
+            <circle id="gauge-progress-arc" cx="60" cy="60" r="50" stroke="#EF4444" stroke-width="10" fill="none"
+              stroke-linecap="round" stroke-dasharray="314" stroke-dashoffset="20" transform="rotate(-90 60 60)" />
+          </svg>
+          <div class="score-gauge-number">
+            <span id="gauge-score-val" class="big">95</span>
+            <span class="sub">RIESGO</span>
+          </div>
+        </div>
+
+        <div>
+          <span id="verdict-level-badge" class="badge badge-critical">RIESGO CRÍTICO</span>
+          <h1 id="verdict-title" style="font-size:1.75rem; margin-top:12px;"></h1>
+          <p id="verdict-summary" style="margin-top:8px; color:#F1F5F9; font-size:1.05rem;"></p>
+
+          <div style="margin-top:12px; font-size:0.84rem; color:#CBD5E1; word-break:break-all;">
+            Dirección inspeccionada: <code id="verdict-target-url"
+              style="background:rgba(2,6,23,0.65); padding:4px 8px; border-radius:6px;"></code>
+          </div>
+
+          <div class="verdict-steps-box">
+            <strong style="color:#FFFFFF;">¿Qué debes hacer ahora mismo?</strong>
+            <ul id="verdict-steps-list"></ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- CTA Contextual de Conversión -->
+      <div id="anon-conversion-banner"
+        style="display:none; margin-top:18px; padding:18px 22px; background:linear-gradient(90deg, rgba(0,229,255,0.11), rgba(99,102,241,0.13)); border:1px solid var(--border-cyan); border-radius:16px; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:14px;">
+        <div>
+          <strong style="display:block;">Guarda este reporte y activa alertas gratuitas</strong>
+          <span style="font-size:0.9rem; color:var(--text-secondary);">
+            Crea tu cuenta ciudadana en 25 segundos y conservaremos esta evidencia en tu historial personal.
+          </span>
+        </div>
+        <a id="anon-save-report-btn" href="/register" class="btn btn-primary btn-sm">
+          Crear cuenta gratis para guardar historial
+        </a>
+      </div>
+
+      <!-- 2. BARRA DE ACCIONES FORENSES Y COMPARTIR -->
+      <section class="report-actions-toolbar" aria-label="Exportar y compartir reporte">
+        <div style="display:flex; flex-wrap:wrap; gap:8px;">
+          <button type="button" id="btn-share-whatsapp" class="btn btn-primary btn-sm">
+            <svg class="icon-svg" style="width:15px; height:15px;" viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="18" cy="5" r="3"></circle>
+              <circle cx="6" cy="12" r="3"></circle>
+              <circle cx="18" cy="19" r="3"></circle>
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+            </svg>
+            <span>Compartir Alerta por WhatsApp</span>
+          </button>
+          <button type="button" id="btn-copy-summary" class="btn btn-outline-cyan btn-sm">
+            <svg class="icon-svg" style="width:15px; height:15px;" viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="9" y="9" width="13" height="13" rx="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+            <span>Copiar Resumen</span>
+          </button>
+          <button type="button" id="btn-report-community" class="btn btn-danger-soft btn-sm" style="display:none;">
+            <svg class="icon-svg" style="width:15px; height:15px;" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+              <line x1="12" y1="9" x2="12" y2="13"></line>
+              <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+            <span>Publicar en Muro Comunitario</span>
+          </button>
+          <button type="button" id="btn-report-cicpc" class="btn btn-outline-cyan btn-sm">
+            <svg class="icon-svg" style="width:15px; height:15px;" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+              <path d="M12 8v4"></path>
+              <path d="M12 16h.01"></path>
+            </svg>
+            <span>Notificar / Denunciar al C.I.C.P.C</span>
+          </button>
+        </div>
+
+        <div style="display:flex; flex-wrap:wrap; gap:8px;">
+          <button type="button" id="btn-export-pdf" class="btn btn-ghost btn-sm">
+            <svg class="icon-svg" style="width:15px; height:15px;" viewBox="0 0 24 24" aria-hidden="true">
+              <polyline points="6 9 6 2 18 2 18 9"></polyline>
+              <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+              <rect x="6" y="14" width="12" height="8"></rect>
+            </svg>
+            <span>Descargar Reporte PDF</span>
+          </button>
+          <button type="button" id="btn-export-json" class="btn btn-ghost btn-sm">
+            <svg class="icon-svg" style="width:15px; height:15px;" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            <span>Evidencia JSON (SHA-256)</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- 3. TARJETAS DE HALLAZGOS EXPLICADOS -->
+      <section class="findings-section" aria-label="Explicación de hallazgos">
+        <div
+          style="display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:8px; margin-bottom:14px;">
+          <h2 style="font-size:1.45rem;">¿Por qué dimos este veredicto?</h2>
+          <span id="findings-count-label" class="mono tabular-nums"
+            style="font-size:0.84rem; color:var(--cyan-primary);"></span>
+        </div>
+
+        <div id="findings-list-container"></div>
+      </section>
+
+      <!-- 4. VISOR DE CÓDIGO FUENTE AUDITADO -->
+      <section class="source-viewer-card" aria-label="Evidencia en el código fuente">
+        <div class="source-viewer-header">
+          <div style="display:inline-flex; align-items:center; gap:8px; flex-wrap:wrap;">
+            <svg class="icon-svg" style="color:var(--cyan-primary);" viewBox="0 0 24 24" aria-hidden="true">
+              <polyline points="16 18 22 12 16 6"></polyline>
+              <polyline points="8 6 2 12 8 18"></polyline>
+            </svg>
+            <strong style="color:var(--text-primary);">Radiografía del Código Fuente Auditado</strong>
+            <span id="source-transport-meta"></span>
+          </div>
+          <span id="source-integrity-hash" style="color:var(--cyan-primary); word-break:break-all;"></span>
+        </div>
+
+        <div id="source-lines-container" class="source-lines-list"></div>
+      </section>
+
+      <!-- 5. ENCUESTA DE CLARIDAD CIUDADANA -->
+      <section class="clarity-survey-box" aria-label="Calificar claridad de la explicación">
+        <div>
+          <strong>¿Te resultó clara y fácil de entender esta explicación?</strong>
+          <p id="clarity-survey-msg" style="font-size:0.86rem; color:var(--text-secondary); margin-top:2px;">
+            Tu calificación en 1 clic nos ayuda a proteger mejor a personas con poca experiencia técnica.
+          </p>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <button type="button" id="clarity-vote-yes" class="btn btn-outline-cyan btn-sm">
+            Sí, muy clara
+          </button>
+          <button type="button" id="clarity-vote-no" class="btn btn-ghost btn-sm">
+            Puede ser más sencilla
+          </button>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- MODAL DE NOTIFICACIÓN Y DENUNCIA CIUDADANA AL C.I.C.P.C -->
+  <div id="cicpc-report-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="cicpc-modal-title">
+    <div class="modal-card" style="max-width: 560px;">
+      <button type="button" id="cicpc-modal-close" class="modal-close" aria-label="Cerrar formulario C.I.C.P.C">
+        <svg class="icon-svg" viewBox="0 0 24 24" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+
+      <span class="badge badge-tech">División de Delitos Informáticos (C.I.C.P.C)</span>
+      <h3 id="cicpc-modal-title" style="margin-top:12px;">Notificar Caso y Evidencia Forense</h3>
+      <p class="form-hint" style="margin-top:6px; margin-bottom:16px;">
+        Se adjuntará automáticamente la radiografía técnica verificada y la huella criptográfica <code>SHA-256</code> de este enlace para revisión experta.
+      </p>
+
+      <form id="cicpc-citizen-form">
+        <div class="form-group">
+          <label for="cicpc-channel" class="form-label">¿Por cuál medio recibiste el enlace sospechoso?</label>
+          <select id="cicpc-channel" class="form-select" required>
+            <option value="whatsapp">WhatsApp (Mensaje directo o grupo)</option>
+            <option value="sms">Mensaje de Texto (SMS)</option>
+            <option value="social">Redes Sociales (Instagram / Facebook / TikTok)</option>
+            <option value="email">Correo Electrónico</option>
+            <option value="telegram">Telegram</option>
+            <option value="web">Búsqueda Web / Anuncio</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="cicpc-entity" class="form-label">Institución, banco o marca que intenta suplantar</label>
+          <input type="text" id="cicpc-entity" class="form-input" placeholder="Ej: Banco Nacional, Bono Social, Empresa de Envíos" required>
+        </div>
+
+        <div class="form-group">
+          <label for="cicpc-suspect" class="form-label">Teléfono remitente, perfil o correo del estafador (opcional)</label>
+          <input type="text" id="cicpc-suspect" class="form-input" placeholder="Ej: +58 412-0000000 o @cuenta_falsa">
+        </div>
+
+        <div class="form-group">
+          <label for="cicpc-impact" class="form-label">Situación actual del caso</label>
+          <select id="cicpc-impact" class="form-select" required>
+            <option value="PREVENTIVE">Preventivo — No llegué a ingresar mis datos</option>
+            <option value="CREDENTIALS_EXPOSED">Exposición — Llegué a escribir mi clave, cédula o tarjeta</option>
+            <option value="FINANCIAL_LOSS">Afectación Económica — Se produjo un débito o robo de fondos</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="cicpc-statement" class="form-label">Descripción breve de lo ocurrido</label>
+          <textarea id="cicpc-statement" class="form-textarea" rows="3" placeholder="Cuéntanos cómo te contactaron o qué te solicitaban hacer..." required></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="cicpc-contact" class="form-label">Tu teléfono o correo de contacto (opcional para seguimiento)</label>
+          <input type="text" id="cicpc-contact" class="form-input" placeholder="Ej: ciudadano@correo.com o +58 414...">
+        </div>
+
+        <button type="submit" id="cicpc-submit-btn" class="btn btn-primary" style="width:100%;">
+          Transmitir Denuncia y Evidencia al C.I.C.P.C
+        </button>
+      </form>
+
+      <div id="cicpc-report-confirmation" style="display:none; padding: 14px 0;"></div>
+    </div>
+  </div>
+
+  <script type="module" src="/js/forensic-viewer.js?v=2.4"></script>
+</body>
+
+</html>

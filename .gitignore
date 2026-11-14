@@ -1,0 +1,13 @@
+node_modules/
+.wrangler/
+.local-edge/
+dist/
+.env
+.dev.vars
+.DS_Store
+
+# Archivos fuente crudos locales (ya optimizados e integrados en frontend/assets/)
+Gemini_Generated_Image_*.png
+personas_alegres_por_su_seguirad_*.mp4
+/cicpc.mp4
+/logo.png

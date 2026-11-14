@@ -1,0 +1,51 @@
+{
+  "name": "Detector360 — Escudo Ciudadano Anti-Phishing",
+  "short_name": "Detector360",
+  "description": "Analiza enlaces sospechosos de WhatsApp, SMS o correo en 2 segundos con Rayos X Web antes de entregar tus datos.",
+  "lang": "es",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#03153E",
+  "theme_color": "#03153E",
+  "categories": ["security", "utilities", "productivity"],
+  "icons": [
+    {
+      "src": "/assets/images/logo-pwa-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/images/logo-pwa-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "share_target": {
+    "action": "/",
+    "method": "GET",
+    "enctype": "application/x-www-form-urlencoded",
+    "params": {
+      "title": "shared_title",
+      "text": "shared_text",
+      "url": "shared_url"
+    }
+  },
+  "shortcuts": [
+    {
+      "name": "Analizar Enlace Sospechoso",
+      "short_name": "Analizar",
+      "description": "Pega y verifica un enlace al instante",
+      "url": "/#hero-scanner"
+    },
+    {
+      "name": "Mi Historial de Protección",
+      "short_name": "Historial",
+      "description": "Revisa tus análisis guardados",
+      "url": "/dashboard"
+    }
+  ]
+}

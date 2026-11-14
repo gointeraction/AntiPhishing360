@@ -1,0 +1,25 @@
+name = "detector360-api"
+main = "src/index.ts"
+compatibility_date = "2026-11-01"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+ENVIRONMENT = "production"
+ALLOWED_ORIGIN = "https://detector360.app"
+JWT_ISSUER = "detector360.app"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "detector360-db"
+database_id = "00000000-0000-0000-0000-000000000001"
+migrations_dir = "migrations"
+
+[[kv_namespaces]]
+binding = "KV_CACHE"
+id = "kv_detector360_cache_prod"
+preview_id = "kv_detector360_cache_preview"
+
+[[r2_buckets]]
+binding = "R2_EVIDENCE"
+bucket_name = "detector360-evidence"
+preview_bucket_name = "detector360-evidence-preview"

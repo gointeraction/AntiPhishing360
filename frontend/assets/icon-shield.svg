@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <rect width="512" height="512" rx="112" fill="#060B19"/>
+  <defs>
+    <linearGradient id="orbGrad" x1="64" y1="64" x2="448" y2="448" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#2563EB"/>
+      <stop offset="48%" stop-color="#00E5FF"/>
+      <stop offset="100%" stop-color="#10B981"/>
+    </linearGradient>
+    <radialGradient id="shieldCore" cx="50%" cy="45%" r="50%">
+      <stop offset="0%" stop-color="#0EA5E9" stop-opacity="0.28"/>
+      <stop offset="100%" stop-color="#0A1124" stop-opacity="0.96"/>
+    </radialGradient>
+  </defs>
+  <circle cx="256" cy="256" r="196" stroke="url(#orbGrad)" stroke-width="16" stroke-dasharray="980 120" stroke-linecap="round"/>
+  <path d="M256 96L392 152V254C392 344 332 406 256 436C180 406 120 344 120 254V152L256 96Z" fill="url(#shieldCore)" stroke="url(#orbGrad)" stroke-width="18" stroke-linejoin="round"/>
+  <path d="M166 252C188 214 220 196 256 196C292 196 324 214 346 252C324 290 292 308 256 308C220 308 188 290 166 252Z" fill="#060B19" stroke="#00E5FF" stroke-width="14" stroke-linejoin="round"/>
+  <circle cx="256" cy="252" r="28" fill="url(#orbGrad)"/>
+  <circle cx="266" cy="242" r="8" fill="#F8FAFC"/>
+</svg>

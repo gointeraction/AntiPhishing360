@@ -1,0 +1,805 @@
+/* ==========================================================================
+   DETECTOR360 — CORPORATE CYBER DEFENSE & HOLOGRAPHIC TECH DESIGN SYSTEM
+   UI/UX Pro Max Architecture: Palette -> Typography -> Glass & PCB Surfaces
+   WCAG High-Contrast • Zero Layout Shift • Reduced Motion Compliant
+   ========================================================================== */
+
+:root {
+  /* ------------------------------------------------------------------------
+     1. PALETA CORPORATIVA "CORPORATE CYBER DEFENSE & HOLOGRAPHIC TECH"
+     ------------------------------------------------------------------------ */
+  --bg-top-light: #DCEBFB;
+  --bg-mid-transition: #89B9F3;
+  --bg-bottom-dark: #03153E;
+
+  --primary-electric-blue: #0066FF;
+  --secondary-royal-blue: #0A3D91;
+  --holographic-cyan-glow: #00E1FF;
+  --threat-accent-red: #FF2E4C;
+
+  --text-on-light: #082567;
+  --text-on-light-muted: #1E428A;
+  --text-on-dark: #FFFFFF;
+  --text-on-dark-secondary: #C5DCFA;
+  --ui-surface-white: #FFFFFF;
+
+  /* Mapeo Semántico para Componentes Transversales (Landing + App SaaS) */
+  --bg-obsidian: #03153E;
+  --bg-subtle: #051D52;
+  --bg-surface: #072566;
+  --bg-interactive: #0A3D91;
+  --bg-elevated: #0E4BB0;
+  --bg-code: #020D28;
+
+  --border-hairline: rgba(0, 225, 255, 0.18);
+  --border-subtle: rgba(137, 185, 243, 0.24);
+  --border-default: rgba(0, 225, 255, 0.32);
+  --border-cyan: rgba(0, 225, 255, 0.55);
+  --border-cyan-strong: #00E1FF;
+
+  --specular-top: inset 0 1px 0 0 rgba(255, 255, 255, 0.28), inset 1px 0 0 0 rgba(0, 225, 255, 0.18);
+  --specular-cyan: inset 0 1px 0 0 rgba(0, 225, 255, 0.65), 0 0 24px rgba(0, 225, 255, 0.25);
+
+  /* Acentos de Marca Holográficos */
+  --cyan-primary: #00E1FF;
+  --cyan-hover: #5CEBFF;
+  --cyan-glow: rgba(0, 225, 255, 0.35);
+  --cyan-soft: rgba(0, 225, 255, 0.14);
+  --text-on-cyan: #03153E;
+  --indigo-accent: #0066FF;
+  --indigo-soft: rgba(0, 102, 255, 0.2);
+
+  /* Jerarquía de Texto sobre Superficies Oscuras (#03153E / #0A3D91) */
+  --text-primary: #FFFFFF;
+  --text-secondary: #C8DDF8;
+  --text-muted: #8EB5E8;
+
+  /* Semáforo Forense Ciudadano (Alto Contraste Amenaza vs Protección) */
+  --safe-color: #00E5A3;
+  --safe-bg: #04332C;
+  --safe-border: #2EF2B8;
+
+  --warn-color: #FFB020;
+  --warn-bg: #3D2405;
+  --warn-border: #FFC857;
+
+  --crit-color: #FF2E4C;
+  --crit-bg: #450818;
+  --crit-border: #FF5C74;
+
+  /* ------------------------------------------------------------------------
+     2. TIPOGRAFÍA GEOMÉTRICA SANS-SERIF (Poppins / Montserrat / Plus Jakarta)
+     ------------------------------------------------------------------------ */
+  --font-display: 'Poppins', 'Montserrat', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-body: 'Plus Jakarta Sans', 'Poppins', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* Sistema de Espaciado (Base 8px) */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 64px;
+  --space-3xl: 96px;
+
+  /* Border Radius */
+  --radius-hero: 22px;
+  --radius-card: 16px;
+  --radius-input: 12px;
+  --radius-pill: 9999px;
+
+  /* Sombras Difusas Azuladas y Resplandor Holográfico */
+  --shadow-floating-ui: 0 24px 56px -10px rgba(10, 61, 145, 0.28), 0 8px 24px -6px rgba(0, 102, 255, 0.18);
+  --shadow-card: 0 24px 52px -16px rgba(2, 10, 34, 0.72), var(--specular-top);
+  --shadow-cyan: 0 0 36px -4px rgba(0, 225, 255, 0.42);
+  --transition-fast: 180ms cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-smooth: 320ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  background-color: var(--bg-bottom-dark);
+  color: var(--text-on-dark);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background-color: var(--bg-bottom-dark);
+  color: var(--text-on-dark);
+  overflow-x: hidden;
+}
+
+/* Textura global sutil de circuitos impresos (PCB) en la base azul marino */
+.pcb-dark-surface {
+  background-color: var(--bg-bottom-dark);
+  background-image:
+    radial-gradient(ellipse 70% 50% at 50% 0%, rgba(0, 102, 255, 0.26), transparent 70%),
+    linear-gradient(rgba(0, 225, 255, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 225, 255, 0.045) 1px, transparent 1px);
+  background-size: 100% 100%, 56px 56px, 56px 56px;
+}
+
+h1, h2, .display-heading {
+  font-family: var(--font-display);
+  margin: 0;
+  letter-spacing: -0.025em;
+  color: var(--text-primary);
+  text-wrap: balance;
+}
+
+h1 {
+  font-size: clamp(2.15rem, 4.4vw, 3.45rem);
+  font-weight: 700;
+  line-height: 1.12;
+}
+
+h2 {
+  font-size: clamp(1.75rem, 3.2vw, 2.4rem);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+h3 {
+  font-family: var(--font-display);
+  font-size: clamp(1.15rem, 1.8vw, 1.32rem);
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  margin: 0;
+  color: var(--text-primary);
+}
+
+p {
+  margin: 0;
+  max-width: 70ch;
+}
+
+a {
+  color: var(--holographic-cyan-glow);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  color: #80F0FF;
+}
+
+code, pre, .mono {
+  font-family: var(--font-mono);
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+:focus-visible {
+  outline: 2px solid var(--holographic-cyan-glow);
+  outline-offset: 3px;
+}
+
+/* Iconografía de línea gruesa y terminación redondeada (Iconography Spec) */
+.icon-svg {
+  width: 19px;
+  height: 19px;
+  flex-shrink: 0;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+}
+
+.icon-svg-lg {
+  width: 24px;
+  height: 24px;
+  stroke-width: 2.3;
+}
+
+/* Indicadores Luminosos LED */
+.status-led {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.status-led.cyan {
+  background-color: var(--holographic-cyan-glow);
+  box-shadow: 0 0 10px var(--holographic-cyan-glow);
+}
+
+.status-led.critical {
+  background-color: var(--threat-accent-red);
+  box-shadow: 0 0 10px var(--threat-accent-red);
+}
+
+.status-led.warning {
+  background-color: var(--warn-color);
+  box-shadow: 0 0 10px var(--warn-color);
+}
+
+.status-led.safe {
+  background-color: var(--safe-color);
+  box-shadow: 0 0 10px var(--safe-color);
+}
+
+/* Layout Container */
+.container {
+  width: 100%;
+  max-width: 1220px;
+  margin: 0 auto;
+  padding: 0 var(--space-lg);
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding: 0 var(--space-md);
+  }
+}
+
+/* Botones Corporativos Cyber-Defense (Min-Height 44px) */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 22px;
+  border-radius: var(--radius-input);
+  font-family: var(--font-display);
+  font-size: 0.93rem;
+  font-weight: 600;
+  line-height: 1.2;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast),
+    background-color var(--transition-fast), border-color var(--transition-fast),
+    color var(--transition-fast);
+  text-decoration: none;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #0066FF 0%, #0052D4 65%, #0099FF 100%);
+  color: #FFFFFF;
+  font-weight: 700;
+  border-color: rgba(0, 225, 255, 0.65);
+  box-shadow: 0 10px 26px -4px rgba(0, 102, 255, 0.52), 0 0 16px rgba(0, 225, 255, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.42);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #1A75FF 0%, #0066FF 60%, #00C8FF 100%);
+  color: #FFFFFF;
+  transform: translateY(-1px);
+  box-shadow: 0 14px 32px -4px rgba(0, 102, 255, 0.68), 0 0 24px rgba(0, 225, 255, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55);
+}
+
+.btn-outline-cyan {
+  background-color: rgba(0, 225, 255, 0.1);
+  color: var(--holographic-cyan-glow);
+  border-color: rgba(0, 225, 255, 0.6);
+  box-shadow: var(--specular-top);
+}
+
+.btn-outline-cyan:hover:not(:disabled) {
+  background-color: rgba(0, 225, 255, 0.22);
+  border-color: #FFFFFF;
+  color: #FFFFFF;
+  transform: translateY(-1px);
+}
+
+.btn-ghost {
+  background-color: rgba(10, 61, 145, 0.55);
+  color: #FFFFFF;
+  border-color: rgba(137, 185, 243, 0.35);
+  box-shadow: var(--specular-top);
+}
+
+.btn-ghost:hover:not(:disabled) {
+  background-color: rgba(0, 102, 255, 0.42);
+  border-color: var(--holographic-cyan-glow);
+  color: #FFFFFF;
+}
+
+.btn-danger-soft {
+  background-color: rgba(255, 46, 76, 0.18);
+  color: #FFD1D9;
+  border-color: rgba(255, 46, 76, 0.58);
+}
+
+.btn-danger-soft:hover:not(:disabled) {
+  background-color: rgba(255, 46, 76, 0.34);
+  color: #FFFFFF;
+}
+
+.btn-sm {
+  min-height: 38px;
+  padding: 7px 15px;
+  font-size: 0.85rem;
+}
+
+.btn-lg {
+  min-height: 52px;
+  padding: 14px 28px;
+  font-size: 1.02rem;
+}
+
+/* Píldoras UI & Badges (ui_pill_text: weight 500/700, #0A3D91 sobre claro) */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 15px;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-display);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.badge-tech {
+  background: linear-gradient(90deg, rgba(0, 102, 255, 0.24), rgba(0, 225, 255, 0.18));
+  border: 1px solid rgba(0, 225, 255, 0.52);
+  color: var(--holographic-cyan-glow);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+.badge-pill-light {
+  background-color: var(--ui-surface-white);
+  border: 1px solid rgba(0, 102, 255, 0.25);
+  color: var(--secondary-royal-blue);
+  font-weight: 700;
+  box-shadow: 0 8px 20px -6px rgba(10, 61, 145, 0.18);
+}
+
+.badge-safe {
+  background-color: var(--safe-bg);
+  border: 1px solid var(--safe-border);
+  color: #B8FFEA;
+}
+
+.badge-warning {
+  background-color: var(--warn-bg);
+  border: 1px solid var(--warn-border);
+  color: #FFE7B3;
+}
+
+.badge-critical {
+  background-color: var(--crit-bg);
+  border: 1px solid var(--crit-border);
+  color: #FFD6DC;
+}
+
+/* ==========================================================================
+   NAVBAR CORPORATIVA LIMPIA FLOTANTE (UI BLANCA + LOGOTIPO OFICIAL)
+   ========================================================================== */
+.navbar-wrapper {
+  position: sticky;
+  top: 14px;
+  z-index: 100;
+  padding: 0 var(--space-md);
+  margin-bottom: 8px;
+}
+
+.navbar {
+  max-width: 1200px;
+  margin: 0 auto;
+  height: 72px;
+  background-color: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(0, 102, 255, 0.2);
+  border-radius: 18px;
+  box-shadow: var(--shadow-floating-ui), inset 0 1px 0 #FFFFFF;
+}
+
+.navbar-inner {
+  height: 100%;
+  padding: 0 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+
+/* Logotipo Institucional Limpio con logo.png */
+.brand-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  color: var(--text-on-light);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.28rem;
+  letter-spacing: -0.025em;
+}
+
+.brand-logo:hover {
+  color: var(--primary-electric-blue);
+}
+
+.brand-logo-img {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  flex-shrink: 0;
+  filter: drop-shadow(0 4px 10px rgba(0, 102, 255, 0.28));
+}
+
+.brand-wordmark {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.05;
+}
+
+.brand-wordmark-main {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--text-on-light);
+  letter-spacing: -0.03em;
+}
+
+.brand-wordmark-main .accent {
+  background: linear-gradient(90deg, #0066FF 0%, #00B8D9 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.brand-wordmark-sub {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--secondary-royal-blue);
+  margin-top: 2px;
+}
+
+/* Ajuste de botones y enlaces dentro de la Navbar Blanca Corporativa */
+.navbar .nav-links {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.navbar .nav-links a {
+  color: var(--text-on-light);
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 8px 13px;
+  border-radius: 10px;
+  transition: color var(--transition-fast), background-color var(--transition-fast);
+}
+
+.navbar .nav-links a:hover {
+  color: var(--primary-electric-blue);
+  background-color: rgba(0, 102, 255, 0.08);
+}
+
+.navbar .btn-ghost {
+  background-color: rgba(220, 235, 251, 0.65);
+  color: var(--secondary-royal-blue);
+  border-color: rgba(10, 61, 145, 0.22);
+  font-weight: 600;
+}
+
+.navbar .btn-ghost:hover:not(:disabled) {
+  background-color: #DCEBFB;
+  border-color: var(--primary-electric-blue);
+  color: var(--text-on-light);
+}
+
+.navbar .btn-outline-cyan {
+  background: linear-gradient(135deg, #0066FF 0%, #0A3D91 100%);
+  color: #FFFFFF;
+  border-color: rgba(0, 225, 255, 0.55);
+  box-shadow: 0 6px 18px -4px rgba(0, 102, 255, 0.45);
+}
+
+.navbar .btn-outline-cyan:hover:not(:disabled) {
+  background: linear-gradient(135deg, #1A75FF 0%, #0066FF 100%);
+  color: #FFFFFF;
+}
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mobile-menu-toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  background: #DCEBFB;
+  border: 1px solid rgba(10, 61, 145, 0.25);
+  color: var(--text-on-light);
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+@media (max-width: 980px) {
+  .navbar .nav-links {
+    display: none;
+  }
+  .navbar .nav-links.open {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    position: absolute;
+    top: 80px;
+    left: var(--space-md);
+    right: var(--space-md);
+    background-color: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(0, 102, 255, 0.25);
+    border-radius: 16px;
+    padding: var(--space-md);
+    gap: 6px;
+    box-shadow: var(--shadow-floating-ui);
+  }
+  .mobile-menu-toggle {
+    display: inline-flex;
+  }
+}
+
+/* Modal Universal Holográfico */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background-color: rgba(3, 21, 62, 0.84);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-md);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--transition-fast);
+}
+
+.modal-backdrop.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.modal-card {
+  width: 100%;
+  max-width: 520px;
+  background: linear-gradient(165deg, rgba(10, 61, 145, 0.96) 0%, rgba(3, 21, 62, 0.98) 100%);
+  border: 1.5px solid var(--holographic-cyan-glow);
+  border-radius: var(--radius-hero);
+  padding: var(--space-xl);
+  box-shadow: var(--shadow-card), var(--shadow-cyan);
+  transform: translateY(12px) scale(0.98);
+  transition: transform var(--transition-smooth);
+  position: relative;
+}
+
+.modal-backdrop.active .modal-card {
+  transform: translateY(0) scale(1);
+}
+
+.modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(0, 225, 255, 0.4);
+  color: #FFFFFF;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color var(--transition-fast), background-color var(--transition-fast);
+}
+
+.modal-close:hover {
+  background: rgba(0, 225, 255, 0.25);
+  border-color: #FFFFFF;
+}
+
+/* Formularios de Precisión */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: var(--space-md);
+}
+
+.form-label {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.form-input,
+.form-select,
+.form-textarea {
+  width: 100%;
+  min-height: 46px;
+  background-color: rgba(2, 13, 40, 0.82);
+  border: 1px solid rgba(137, 185, 243, 0.35);
+  border-radius: var(--radius-input);
+  padding: 11px 14px;
+  color: #FFFFFF;
+  font-family: var(--font-body);
+  font-size: 1rem;
+  box-shadow: inset 0 2px 4px rgba(2, 8, 28, 0.5);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus {
+  outline: none;
+  border-color: var(--holographic-cyan-glow);
+  box-shadow: 0 0 0 3px rgba(0, 225, 255, 0.22), inset 0 1px 2px rgba(2, 8, 28, 0.3);
+}
+
+.form-hint {
+  font-size: 0.84rem;
+  color: var(--text-secondary);
+}
+
+/* Toast Notification */
+.toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 300;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 390px;
+}
+
+.toast {
+  background: linear-gradient(135deg, #0A3D91 0%, #03153E 100%);
+  backdrop-filter: blur(14px);
+  border: 1.5px solid var(--holographic-cyan-glow);
+  color: #FFFFFF;
+  padding: 14px 18px;
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card), var(--shadow-cyan);
+  font-size: 0.92rem;
+  animation: toastIn 220ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.toast.error {
+  border-color: var(--threat-accent-red);
+  background: linear-gradient(135deg, #590A1E 0%, #2B040E 100%);
+}
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Banner Flotante PWA */
+.pwa-floating-banner {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  z-index: 150;
+  background: linear-gradient(135deg, rgba(10, 61, 145, 0.96) 0%, rgba(3, 21, 62, 0.98) 100%);
+  backdrop-filter: blur(16px);
+  border: 1.5px solid var(--holographic-cyan-glow);
+  border-radius: var(--radius-card);
+  padding: 14px 18px;
+  display: none;
+  align-items: center;
+  gap: 14px;
+  box-shadow: var(--shadow-card), var(--shadow-cyan);
+  max-width: 440px;
+}
+
+.pwa-floating-banner.visible {
+  display: flex;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+/* Modal Global Corporativo */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 250;
+  background: rgba(2, 10, 28, 0.82);
+  backdrop-filter: blur(10px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.modal-backdrop.open {
+  display: flex;
+}
+
+.modal-card {
+  position: relative;
+  width: 100%;
+  max-width: 520px;
+  max-height: 92vh;
+  overflow-y: auto;
+  background: linear-gradient(165deg, #0A3D91 0%, #03153E 100%);
+  border: 1.5px solid var(--holographic-cyan-glow);
+  border-radius: 22px;
+  padding: 30px;
+  box-shadow: var(--shadow-card), var(--shadow-cyan);
+}
+
+.modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 225, 255, 0.35);
+  background: rgba(2, 13, 40, 0.72);
+  color: #FFFFFF;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+/* ==========================================================================
+   CUMPLIMIENTO ESTRICTO DE ACCESIBILIDAD VESTIBULAR
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

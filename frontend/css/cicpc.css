@@ -1,0 +1,428 @@
+/* ==========================================================================
+   MÓDULO DE COMANDO E INTELIGENCIA ESTRATÉGICA C.I.C.P.C (ACCESO RESTRINGIDO)
+   Corporate Cyber Defense & Holographic Tech — División Delitos Informáticos
+   ========================================================================== */
+
+body.cicpc-command-body {
+  background:
+    radial-gradient(circle at 18% 0%, rgba(0, 225, 255, 0.16) 0%, transparent 45%),
+    radial-gradient(circle at 85% 15%, rgba(212, 175, 55, 0.1) 0%, transparent 40%),
+    linear-gradient(180deg, #04194A 0%, #03153E 320px, #020B22 100%);
+  min-height: 100vh;
+  color: #FFFFFF;
+}
+
+/* Cinta Superior de Clasificación de Seguridad */
+.cicpc-security-classification-bar {
+  background: linear-gradient(90deg, #020A1E 0%, #0A3D91 50%, #020A1E 100%);
+  border-bottom: 1px solid rgba(212, 175, 55, 0.45);
+  padding: 8px 16px;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #F8E39C;
+}
+
+/* ==========================================================================
+   1. PORTAL DE AUTENTICACIÓN RESTRINGIDA (/cicpc/login)
+   ========================================================================== */
+.cicpc-auth-shell {
+  max-width: 1120px;
+  margin: 36px auto 64px;
+  padding: 0 var(--space-md);
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 36px;
+  align-items: center;
+}
+
+@media (max-width: 900px) {
+  .cicpc-auth-shell {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+}
+
+.cicpc-emblem-vault {
+  width: 100%;
+  max-width: 320px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.cicpc-emblem-video-box {
+  width: 100%;
+  aspect-ratio: 9 / 16;
+  background-color: #000000;
+  border-radius: 22px;
+  border: 2px solid rgba(212, 175, 55, 0.65);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.8), 0 0 28px rgba(0, 225, 255, 0.22);
+  overflow: hidden;
+}
+
+.cicpc-emblem-video-box video {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+  background-color: #000000;
+}
+
+.cicpc-emblem-caption-dock {
+  width: 100%;
+  text-align: center;
+  padding: 12px 16px;
+  border-radius: 14px;
+  background: rgba(3, 21, 62, 0.9);
+  border: 1px solid rgba(0, 225, 255, 0.35);
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #DCEBFB;
+}
+
+.cicpc-auth-panel {
+  width: 100%;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(0, 225, 255, 0.16), transparent 55%),
+    linear-gradient(165deg, rgba(10, 61, 145, 0.92) 0%, rgba(2, 13, 40, 0.98) 100%);
+  border: 1.5px solid var(--holographic-cyan-glow);
+  border-radius: 26px;
+  padding: 38px 40px;
+  box-shadow: var(--shadow-card), var(--shadow-cyan);
+}
+
+@media (max-width: 600px) {
+  .cicpc-auth-panel {
+    padding: 26px 20px;
+  }
+}
+
+.cicpc-factor-tag {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: #F8E39C;
+  background: rgba(212, 175, 55, 0.14);
+  border: 1px solid rgba(212, 175, 55, 0.45);
+  padding: 2px 8px;
+  border-radius: 6px;
+  margin-right: 6px;
+}
+
+.cicpc-auth-warning {
+  margin-top: 18px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: rgba(255, 46, 76, 0.12);
+  border: 1px solid rgba(255, 46, 76, 0.45);
+  font-size: 0.82rem;
+  color: #FFD6DC;
+  line-height: 1.55;
+}
+
+/* ==========================================================================
+   2. CENTRO DE COMANDO ESTRATÉGICO (/cicpc)
+   ========================================================================== */
+.cicpc-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 120;
+  background: rgba(2, 12, 36, 0.94);
+  backdrop-filter: blur(16px);
+  border-bottom: 1.5px solid rgba(0, 225, 255, 0.42);
+  padding: 14px 0;
+}
+
+.cicpc-topbar-inner {
+  max-width: 1380px;
+  margin: 0 auto;
+  padding: 0 var(--space-md);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.cicpc-brand-cluster {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.cicpc-officer-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  border-radius: 12px;
+  background: rgba(10, 61, 145, 0.55);
+  border: 1px solid rgba(212, 175, 55, 0.5);
+  font-size: 0.82rem;
+}
+
+.cicpc-main-container {
+  max-width: 1380px;
+  margin: 26px auto 72px;
+  padding: 0 var(--space-md);
+}
+
+/* 6 KPIs Estratégicos */
+.cicpc-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 14px;
+  margin-bottom: 26px;
+}
+
+@media (max-width: 1180px) {
+  .cicpc-kpi-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .cicpc-kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.cicpc-kpi-card {
+  background: linear-gradient(165deg, rgba(10, 61, 145, 0.85) 0%, rgba(3, 21, 62, 0.96) 100%);
+  border: 1px solid rgba(0, 225, 255, 0.35);
+  border-bottom: 3px solid var(--primary-electric-blue);
+  border-radius: 16px;
+  padding: 16px 18px;
+}
+
+.cicpc-kpi-card.urgent {
+  border-color: rgba(255, 46, 76, 0.55);
+  border-bottom-color: var(--threat-accent-red);
+}
+
+.cicpc-kpi-card.gold {
+  border-color: rgba(212, 175, 55, 0.55);
+  border-bottom-color: #D4AF37;
+}
+
+.cicpc-kpi-label {
+  font-size: 0.78rem;
+  color: #C5DCFA;
+  display: block;
+}
+
+.cicpc-kpi-value {
+  font-family: var(--font-display);
+  font-size: 1.95rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #FFFFFF;
+  margin-top: 4px;
+  display: block;
+}
+
+/* Radar de Campañas Coordinadas */
+.cicpc-intel-row {
+  display: grid;
+  grid-template-columns: 1.65fr 1fr;
+  gap: 20px;
+  margin-bottom: 26px;
+}
+
+@media (max-width: 1024px) {
+  .cicpc-intel-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.cicpc-panel-card {
+  background: linear-gradient(165deg, rgba(8, 44, 110, 0.86) 0%, rgba(2, 13, 40, 0.97) 100%);
+  border: 1.5px solid rgba(0, 225, 255, 0.36);
+  border-radius: 20px;
+  padding: 22px 24px;
+  box-shadow: var(--shadow-card);
+}
+
+.cicpc-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.cicpc-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.cicpc-table th {
+  text-align: left;
+  padding: 10px 12px;
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--holographic-cyan-glow);
+  border-bottom: 1px solid rgba(0, 225, 255, 0.28);
+}
+
+.cicpc-table td {
+  padding: 11px 12px;
+  border-bottom: 1px solid rgba(137, 185, 243, 0.14);
+  color: #E2EEFD;
+}
+
+/* Bandeja de Casos + Inspector Experto */
+.cicpc-workspace-grid {
+  display: grid;
+  grid-template-columns: 430px 1fr;
+  gap: 22px;
+  align-items: start;
+}
+
+@media (max-width: 1100px) {
+  .cicpc-workspace-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.cicpc-filters-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.cicpc-cases-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 760px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.cicpc-case-item {
+  text-align: left;
+  width: 100%;
+  background: rgba(3, 18, 52, 0.88);
+  border: 1px solid rgba(137, 185, 243, 0.25);
+  border-left: 4px solid var(--primary-electric-blue);
+  border-radius: 14px;
+  padding: 14px 16px;
+  color: #FFFFFF;
+  cursor: pointer;
+  transition: border-color var(--transition-fast), background var(--transition-fast), transform var(--transition-fast);
+}
+
+.cicpc-case-item.prio-URGENT {
+  border-left-color: var(--threat-accent-red);
+}
+
+.cicpc-case-item.prio-HIGH {
+  border-left-color: #F59E0B;
+}
+
+.cicpc-case-item:hover,
+.cicpc-case-item.selected {
+  background: rgba(10, 61, 145, 0.72);
+  border-color: var(--holographic-cyan-glow);
+}
+
+.cicpc-dossier-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin: 16px 0;
+}
+
+@media (max-width: 760px) {
+  .cicpc-dossier-meta-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.cicpc-meta-box {
+  background: rgba(2, 11, 34, 0.78);
+  border: 1px solid rgba(0, 225, 255, 0.24);
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+
+.cicpc-meta-box .lbl {
+  display: block;
+  font-size: 0.73rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #9CC4F6;
+}
+
+.cicpc-meta-box .val {
+  display: block;
+  margin-top: 4px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #FFFFFF;
+  word-break: break-word;
+}
+
+.cicpc-statement-box {
+  background: rgba(2, 11, 34, 0.85);
+  border-left: 3px solid #D4AF37;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin: 14px 0 20px;
+  color: #E6F0FD;
+  font-size: 0.93rem;
+  line-height: 1.6;
+}
+
+.cicpc-decision-form {
+  margin-top: 22px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(0, 225, 255, 0.28);
+}
+
+.cicpc-channel-bar-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.cicpc-channel-track {
+  width: 100%;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.cicpc-channel-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #0066FF, #00E1FF);
+  border-radius: 999px;
+}
+
+@media print {
+  .cicpc-topbar,
+  .cicpc-security-classification-bar,
+  .cicpc-cases-sidebar,
+  .cicpc-intel-row,
+  #cicpc-audit-section {
+    display: none !important;
+  }
+
+  .cicpc-workspace-grid {
+    grid-template-columns: 1fr !important;
+  }
+}

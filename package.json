@@ -1,0 +1,26 @@
+{
+  "name": "detector360",
+  "version": "1.0.0",
+  "description": "Detector360 - Plataforma Web Comercial y PWA de Protección Ciudadana Anti-Phishing sobre Cloudflare Edge",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node dev-server.ts",
+    "start": "node dev-server.ts",
+    "tunnel": ".local-edge\\bin\\cloudflared.exe tunnel --no-autoupdate --url http://127.0.0.1:8788",
+    "test": "node tests/verify-all.ts",
+    "worker:dev": "wrangler dev --config worker/wrangler.toml",
+    "worker:deploy": "wrangler deploy --config worker/wrangler.toml",
+    "d1:migrate:local": "wrangler d1 migrations apply detector360-db --local --config worker/wrangler.toml",
+    "d1:migrate:prod": "wrangler d1 migrations apply detector360-db --remote --config worker/wrangler.toml",
+    "pages:deploy": "wrangler pages deploy frontend --project-name=detector360-web"
+  },
+  "engines": {
+    "node": ">=22.6.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260101.0",
+    "typescript": "^5.7.0",
+    "wrangler": "^3.99.0"
+  }
+}

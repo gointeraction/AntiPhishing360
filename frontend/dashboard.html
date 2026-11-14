@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#03153E">
+  <title>Panel Ciudadano — Detector360</title>
+
+  <link rel="icon" href="/assets/images/logo-emblem.png" type="image/png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Montserrat:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+
+  <link rel="stylesheet" href="/css/tokens.css">
+  <link rel="stylesheet" href="/css/app.css">
+</head>
+
+<body>
+
+  <div class="navbar-wrapper">
+    <header class="navbar">
+      <div class="navbar-inner">
+        <a href="/" class="brand-logo">
+          <img src="/assets/images/logo-emblem.png" alt="Escudo Oficial Detector360" class="brand-logo-img" width="44"
+            height="44">
+          <span class="brand-wordmark">
+            <span class="brand-wordmark-main">Detector<span class="accent">360</span></span>
+            <span class="brand-wordmark-sub">Anti-Phishing</span>
+          </span>
+        </a>
+
+        <div class="nav-actions">
+          <span id="dash-user-greeting"
+            style="font-size:0.9rem; color:var(--secondary-royal-blue); font-weight:700;"></span>
+          <button type="button" class="btn btn-outline-cyan btn-sm" data-pwa-install="1">
+            <svg class="icon-svg" style="width:15px; height:15px;" viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="5" y="2" width="14" height="20" rx="2"></rect>
+              <line x1="12" y1="18" x2="12.01" y2="18"></line>
+            </svg>
+            <span>App Móvil</span>
+          </button>
+          <button type="button" class="btn btn-ghost btn-sm" data-logout-btn="1">Cerrar Sesión</button>
+        </div>
+      </div>
+    </header>
+  </div>
+
+  <div class="dashboard-shell">
+    <aside class="dashboard-sidebar" aria-label="Menú lateral del panel">
+      <nav class="sidebar-nav">
+        <a href="/dashboard" class="sidebar-link active">
+          <svg class="icon-svg" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+          </svg>
+          <span>Mi Escudo e Historial</span>
+        </a>
+        <a href="/scan/new" class="sidebar-link">
+          <svg class="icon-svg" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <span>Escaneo Avanzado</span>
+        </a>
+        <a href="/#alertas-vivo" class="sidebar-link">
+          <svg class="icon-svg" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+            <line x1="12" y1="9" x2="12" y2="13"></line>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+          <span>Muro de Amenazas</span>
+        </a>
+        <a href="/#planes" class="sidebar-link">
+          <svg class="icon-svg" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+          <span>Plan Escudo Familiar</span>
+        </a>
+      </nav>
+
+      <div
+        style="background:rgba(6,11,25,0.75); border:1px solid rgba(148,163,184,0.14); border-radius:12px; padding:14px; font-size:0.84rem;">
+        <strong style="color:var(--cyan-primary); display:block;">Consejo Ciudadano</strong>
+        <p style="color:var(--text-secondary); margin-top:4px;">
+          Nunca entregues códigos recibidos por SMS a supuestos operadores bancarios por teléfono.
+        </p>
+      </div>
+    </aside>
+
+    <main class="dashboard-main">
+      <section class="dash-quick-scan" aria-label="Análisis rápido">
+        <h1 style="font-size:1.45rem; margin-bottom:12px;">Verificar Nuevo Enlace Sospechoso</h1>
+        <form id="dash-quick-scan-form" style="display:flex; gap:12px; flex-wrap:wrap;">
+          <input type="url" id="dash-quick-url" class="form-input mono" style="flex:1; min-width:240px;"
+            placeholder="Pega aquí el enlace http:// o https:// para auditar y guardar..." required>
+          <button type="submit" id="dash-quick-submit" class="btn btn-primary">
+            Analizar Ahora
+          </button>
+          <a href="/scan/new" class="btn btn-ghost">Opciones Avanzadas</a>
+        </form>
+      </section>
+
+      <section class="dash-stats-grid" aria-label="Resumen de tu protección">
+        <div class="stat-card">
+          <div class="stat-label">Enlaces Analizados</div>
+          <div id="stat-total-scans" class="stat-num">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Amenazas Evitadas</div>
+          <div id="stat-threats-avoided" class="stat-num" style="color:var(--crit-border);">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Plan Activo</div>
+          <div id="stat-active-plan" class="stat-num" style="font-size:1.45rem; color:var(--cyan-primary);">
+            Ciudadano Gratis
+          </div>
+        </div>
+      </section>
+
+      <section class="history-card" aria-label="Historial de análisis">
+        <div class="history-toolbar">
+          <h2 style="font-size:1.35rem;">Historial Personal de Análisis</h2>
+          <div class="filter-pills" role="group" aria-label="Filtrar por riesgo">
+            <button type="button" class="filter-btn active" data-risk-filter="">Todos</button>
+            <button type="button" class="filter-btn" data-risk-filter="CRITICAL">
+              <span class="status-led critical" aria-hidden="true"></span>
+              <span>Peligro Crítico</span>
+            </button>
+            <button type="button" class="filter-btn" data-risk-filter="WARNING">
+              <span class="status-led warning" aria-hidden="true"></span>
+              <span>Precaución</span>
+            </button>
+            <button type="button" class="filter-btn" data-risk-filter="SAFE">
+              <span class="status-led safe" aria-hidden="true"></span>
+              <span>Seguros</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="scans-table">
+            <thead>
+              <tr>
+                <th>Semáforo</th>
+                <th>Sitio Auditado y Veredicto</th>
+                <th>Fecha</th>
+                <th>Acciones Forenses</th>
+              </tr>
+            </thead>
+            <tbody id="dashboard-history-tbody">
+              <tr>
+                <td colspan="4" style="text-align:center; padding:28px; color:var(--text-secondary);">
+                  Cargando tu historial de protección...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="/js/dashboard.js"></script>
+</body>
+
+</html>

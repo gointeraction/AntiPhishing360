@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#020B22">
+  <title>Acceso Restringido C.I.C.P.C — División de Delitos Informáticos | Detector360</title>
+
+  <link rel="icon" href="/assets/images/logo-emblem.png" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Montserrat:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/css/tokens.css?v=2.4">
+  <link rel="stylesheet" href="/css/cicpc.css?v=2.4">
+</head>
+<body class="cicpc-command-body">
+
+  <div class="cicpc-security-classification-bar">
+    RED DE ACCESO RESTRINGIDO • DIVISIÓN DE INVESTIGACIONES DE DELITOS INFORMÁTICOS (C.I.C.P.C) • CANAL CIFRADO TLS 1.3
+  </div>
+
+  <main class="cicpc-auth-shell">
+    <!-- Columna Institucional 100% despejada con Emblema Oficial en Video -->
+    <aside class="cicpc-emblem-vault" aria-label="Emblema institucional C.I.C.P.C">
+      <div class="cicpc-emblem-video-box">
+        <video
+          autoplay
+          muted
+          loop
+          playsinline
+          preload="metadata"
+          aria-label="Insignia 3D División de Investigaciones de Delitos Informáticos C.I.C.P.C"
+        >
+          <source src="/assets/video/cicpc.mp4" type="video/mp4">
+        </video>
+      </div>
+      <div class="cicpc-emblem-caption-dock">
+        DIVISIÓN DE DELITOS INFORMÁTICOS • ENLACE FORENSE DETECTOR360
+      </div>
+    </aside>
+
+    <!-- Panel de Validación de 3 Factores de Seguridad -->
+    <section class="cicpc-auth-panel" aria-labelledby="cicpc-login-heading">
+      <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+        <span class="badge badge-tech">
+          <span class="status-led cyan" aria-hidden="true"></span>
+          <span>Autenticación Multifactor Institucional</span>
+        </span>
+        <a href="/" class="btn btn-ghost btn-sm">Volver al Portal Ciudadano</a>
+      </div>
+
+      <h1 id="cicpc-login-heading" style="font-size:1.75rem; margin-top:16px;">
+        Centro de Recepción, Análisis Experto y Acción Estratégica
+      </h1>
+      <p style="color:#C5DCFA; margin-top:8px; font-size:0.95rem;">
+        Ingrese su credencial acreditada, contraseña operativa y la clave maestra criptográfica asignada a la División de Investigaciones de Delitos Informáticos.
+      </p>
+
+      <div id="cicpc-login-error" class="cicpc-auth-warning" style="display:none;" role="alert"></div>
+
+      <form id="cicpc-login-form" style="margin-top:22px;" autocomplete="off">
+        <div class="form-group">
+          <label for="cicpc-badge-id" class="form-label">
+            <span class="cicpc-factor-tag">FACTOR 01</span>Credencial Oficial / Placa de Funcionario
+          </label>
+          <input
+            type="text"
+            id="cicpc-badge-id"
+            class="form-input mono"
+            placeholder="Ej: CICPC-DIDI-2429"
+            required
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="cicpc-password" class="form-label">
+            <span class="cicpc-factor-tag">FACTOR 02</span>Contraseña Operativa Personal
+          </label>
+          <input
+            type="password"
+            id="cicpc-password"
+            class="form-input"
+            placeholder="Ingrese su clave operativa cifrada"
+            required
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="cicpc-security-key" class="form-label">
+            <span class="cicpc-factor-tag">FACTOR 03</span>Clave Maestra de Seguridad Institucional
+          </label>
+          <input
+            type="password"
+            id="cicpc-security-key"
+            class="form-input mono"
+            placeholder="Token de autorización de sala situacional"
+            required
+          >
+        </div>
+
+        <button type="submit" id="cicpc-login-submit" class="btn btn-primary btn-lg" style="width:100%; margin-top:8px;">
+          <svg class="icon-svg" viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="4" y="11" width="16" height="10" rx="2.5"></rect>
+            <path d="M8 11V7a4 4 0 0 1 8 0v4"></path>
+          </svg>
+          <span>Validar Claves e Ingresar al Centro de Comando</span>
+        </button>
+      </form>
+
+      <div class="cicpc-auth-warning">
+        <strong>AVISO DE SEGURIDAD Y AUDITORÍA:</strong> Este módulo es de uso exclusivo para funcionarios autorizados del C.I.C.P.C. Todos los accesos, consultas de expedientes y acciones estratégicas quedan registrados de forma inmutable con dirección IP y sello de tiempo UTC.
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="/js/cicpc-login.js?v=2.4"></script>
+</body>
+</html>
